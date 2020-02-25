@@ -109,7 +109,7 @@ $ ./stack
 Segmentation fault
 ```
 
-The buffer overflow do occur. But the non-executable stack protection prevents the crash program from running the shell code.
+The buffer overflow does occur. But the non-executable stack protection prevents the crash program from running the shellcode.
 
 
 
