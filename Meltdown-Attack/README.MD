@@ -13,7 +13,7 @@ To compile `CacheTime.c` successfully, you should add 2 lines first to resolve t
 #include <stdint.h>
 ```
 
-Yes. Obviously, the accesses of `array[3*4096]` and `array[7*4096]` are extremely faster than that of the other elements, even though the access times of each elements seemed are randomly various among 10 attempts.
+Yes. Obviously, the accesses of `array[3*4096]` and `array[7*4096]` are extremely faster than that of the other elements, even though the access times of each element seems to be randomly various among 10 attempts.
 
 # Task 2
 
@@ -51,7 +51,7 @@ array[7*4096 + 1024] is in cache.
 The Secret = 7.
 ```
 
-**It has a little difference with expected in the textbook.** I tried several times but the outputs always had two candidates as above. I guess that because the cache line in my virtual machine is large enough to store two blocks of data, after putting `array[7*4096 + 1024]` into the cache, there is still some space for data when accessing all candiates to pick up the secret. Then the first elements during accessing, `array[7*4096 + 1024]`, is also put into the cache.
+**It has a little difference with expected in the textbook.** I tried several times but the outputs always had two candidates as above. I guess that because the cache line in my virtual machine is large enough to store two blocks of data, after putting `array[7*4096 + 1024]` into the cache, there is still some space for data when accessing all candidates to pick up the secret. Then the first element during accessing, `array[7*4096 + 1024]`, is also put into the cache.
 
 To verify my assumption, I replace all `4096` with `4096*2` in the code. So it remains no space for another data in the cache. As expected, the result is clear
 

