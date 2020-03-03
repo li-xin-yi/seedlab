@@ -22,7 +22,7 @@ Somehow it always finds the correct secret. So I modify the `CACHE_HIT_THRESHOLD
 # Task 3
 
 ```txt
-[ 2184.475777] secret data address:f8922000
+[  901.703115] secret data address:f881c000
 ```
 
 # Task 4
@@ -41,27 +41,14 @@ Program continues to execute.
 
 # Task 6
 
-I get the outputs
+Yes, I get the outputs
 
 ```txt
 Memory access violation!
-array[0*4096 + 1024] is in cache.
-The Secret = 0.
 array[7*4096 + 1024] is in cache.
 The Secret = 7.
 ```
 
-**It has a little difference with expected in the textbook.** I tried several times but the outputs always had two candidates as above. I guess that because the cache line in my virtual machine is large enough to store two blocks of data, after putting `array[7*4096 + 1024]` into the cache, there is still some space for data when accessing all candidates to pick up the secret. Then the first element during accessing, `array[7*4096 + 1024]`, is also put into the cache.
-
-To verify my assumption, I replace all `4096` with `4096*2` in the code. So it remains no space for another data in the cache. As expected, the result is clear
-
-```txt
-Memory access violation!
-array[7*4096*2 + 1024] is in cache.
-The Secret = 7.
-```
-
-**Therefore, I remain the modification to get expected results in the following tasks.**
 
 # Task 7
 
@@ -69,13 +56,11 @@ The Secret = 7.
 
 It shows
 
-```txt
+```
 Memory access violation!
-array[0*4096*2 + 1024] is in cache.
-The Secret = 0.
 ```
 
-However, consider the situation in [Task 6](#Task-6) above, 0 is not the real kernel data. Actually, I cannot get the kernel data via such a simple approach.
+No useful information output.
 
 ## Task 7.2
 

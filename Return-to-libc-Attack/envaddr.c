@@ -5,5 +5,5 @@ void main()
 {
     char *shell = getenv("MYSHELL");
     if (shell)
-        printf("%x\n", (unsigned int)shell);
+        printf("%s is in %x\n", shell, (unsigned int)shell);
 }
