@@ -113,7 +113,7 @@ with open("badfile", "wb") as f:
     f.write(content)
 ```
 
-**Note**: in the line 5, the length of `content` should be set to a smaller number instead of 300 both in the templete and source code offered by the official site.
+**Note**: in the line 5, the length of `content` should be set to a smaller number instead of 300 both in the template and source code offered by the official site.
 
 Or use the C version `exploit.c`:
 
@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 }
 ```
 
-Finally I got
+Finally, I got
 
 ![](root_shell.png)
 
@@ -188,4 +188,28 @@ gdb-peda$ quit
 ```
 
 # Task 5
+
+```shell
+gcc -fno-stack-protector -z noexecstack -o retlib_rop retlib_rop.c
+sudo chown root retlib_rop
+sudo chmod 4755 retlib_rop
+./retlib_rop
+/bin/sh is in 0xbfffe558
+Address of buffer[] : 0xbfffe520
+Frame Pointer value : 0xbfffe538
+Returned Properly
+```
+
+```
+gdb -q retlib_rop
+r
+p bar
+$1 = {<text variable, no debug info>} 0x8048567 <bar>
+p exit
+$2 = {<text variable, no debug info>} 0xb7e369d0 <__GI_exit>
+```
+
+![](./chainnoarg.png)
+
+
 
