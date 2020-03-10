@@ -24,7 +24,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
         - [x] Task 1-5
         - [ ] Task 6
     - [x] [Format String Vulnerability Lab](./Format-String-Vulnerability)
-    - [ ] [Race Condition Vulnerability Lab](./Race-Condition-Vulnerability)
+    - [x] [Race Condition Vulnerability Lab](./Race-Condition-Vulnerability)
     - [x] [Environment Variable and Set-UID Lab](Environment-Variable-and-Set-UID-Program-Lab)
     - [x] [Shellshock Attack Lab](./Shellshock-Attack)
     - [ ] *Dirty COW Attack Lab*
