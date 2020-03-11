@@ -48,9 +48,9 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ]  RSA Encryption and Signature Lab
     - [ ]  Public-Key Infrastructure (PKI) Lab
     - [ ]  Man-In-The-Middle (MITM) Attack Lab
-- [ ] System Security
-    - [x] [Meltdown Attack Lab](Meltdown-Attack)
-    - [ ] Spectre Attack Lab
+- [x] System Security
+    - [x] [Meltdown Attack Lab](./Meltdown-Attack)
+    - [x] [Spectre Attack Lab](./Spectre-Attack)
 - [ ] Mobile Security
     - [ ] Android Repackaging Attack Lab
     - [ ] Android Rooting Lab
