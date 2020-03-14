@@ -33,7 +33,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ] Cross-Site Scripting Attack Lab
     - [ ] SQL Injection Attack Lab
 - [ ] Network Security
-    - [ ] Packet Sniffing & Spoofing Lab
+    - [ ] [Packet Sniffing & Spoofing Lab](./Packet-Sniffing-and-Spoofing)
     - [ ] TCP Attack Lab
     - [ ] Linux Firewall Lab
     - [ ] Bypassing Firewall using VPN
