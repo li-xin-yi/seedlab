@@ -57,6 +57,28 @@ Ref to the [documentation](https://scapy.readthedocs.io/en/latest/usage.html#gen
 - `tcp dst port 23 and src host x.x.x.x`
 - `net 128.230.0.0/16`
 
+## Task 1.2
 
+```py
+>>> from scapy.all import *
+>>> a = IP(src="x.x.x.x") # replace it with any ip address you want to send packets from
+>>> b = ICMP() 
+>>> p = a/b
+>>> send(p)
+```
+
+## Task 1.3
+
+```py
+from scapy.all import *
+
+for i in range(1,65):
+    a = IP(dst='1.2.3.4',ttl=i)
+    send(a/ICMP())
+```
+
+And with wireshark, we can capture time-to-live exceeded error message packets from different sources, which are routers
+
+![Traceroute](./router_capture.png)
 
 
