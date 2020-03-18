@@ -153,3 +153,41 @@ Change the [`filter_exp[]`](./sniff.c#L16) or directly set the third argument of
 
 - `icmp and src host 10.0.2.4 and dst host 10.0.2.15`
 - `tcp portrange 10-100`
+
+### Task 2.1C
+
+To simplify the problem, I suppose that on the VM `10.0.2.4` we use default telnet port (i.e. 23) with the command (`10.0.2.15` can be replaced with any reachable host, `seed` is a username) :
+
+```
+telnet 10.0.2.15 -l seed
+```
+
+Then, it asks the user to type the passward in an **interactive prompt**.
+
+Meanwhile, on the attacker machine `10.0.2.15`. I write a program [`sniff_pwd.c`](./sniff_pwd.c) to listen on such `telnet` packets with filter ["tcp port 23 and src host 10.0.2.4"](./sniff_pwd.c#L176).
+
+From [the tutorial](https://www.tcpdump.org/pcap.htm), we know the packet data layout as:
+
+Variable | Location (in bytes)
+---------|----------
+`sniff_ethernet` | 	`X`
+`sniff_ip`	| `X` + `SIZE_ETHERNET` 
+`sniff_tcp`	| `X` + `SIZE_ETHERNET` + `{IP header length}`
+payload	 | `X` + `SIZE_ETHERNET` + `{IP header length}` + `{TCP header length}`
+
+To get TCP payload, we should process captured packets like [this](./sniff_pwd.c#L161)
+```c
+if (ip->iph_protocol == IPPROTO_TCP)
+{
+    printf("Capture TCP packet.\n");
+    char *payload = (u_char *)(packet + sizeof(struct ethheader) + sizeof(struct ipheader) + sizeof(struct sniff_tcp));
+    int payload_len = ntohs(ip->iph_len) - sizeof(struct ipheader) - sizeof(struct sniff_tcp);
+    print_payload(payload, payload_len);
+}
+```
+
+[`print_payload()`](./sniff_pwd.c#L106) is a simple parser that makes packet data readable to human. All details can be found in [`sniff_pwd.c`](./sniff_pwd.c).
+
+Finally, image typing `seed` letter by letter as a password on VM `10.0.2.4`. Once a letter is pressed, a TCP packet is sent from `10.0.2.4`, the attacker can sniff a packet with the letter at the end of the data field.
+
+![Get the typed password letters](./telnet.png)
