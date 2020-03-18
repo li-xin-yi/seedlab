@@ -135,7 +135,7 @@ If you want to set a BPF filter on the socket, packets received from the network
 
 #### Question 3.
 
-Change the third argument in (Line 22, [`sniff.c`](./sniff.c))
+Change the third argument in (Line 22, [`sniff.c`](./sniff.c#L22))
 
 ```c
 handle = pcap_open_live("enp0s3", BUFSIZ, 1, 1000, errbuf);
@@ -146,3 +146,10 @@ If using a non-zero `int`, the *promiscuous mode* is turned on. Otherwise, it is
 Similar to [Task 1.4](#task-14), open another VM within the same subnet and use it to `ping` any host.
 
 With promiscuous mode on, the program can capture packets of those `echo` requests above. Otherwise, it will get nothing even if `ping` runs properly. Promiscuous mode enables the program to sniff any packet coming into the NIC regardless of its actual destination host. So with it turned on, we can get packets sent among other computers.
+
+### Task 2.1B
+
+Change the [`filter_exp[]`](./sniff.c#L16) or directly set the third argument of [`pcap_compile()`](./sniff.c#L25) according to [BPF syntax](https://biot.com/capstats/bpf.html).
+
+- `icmp and src host 10.0.2.4 and dst host 10.0.2.15`
+- `tcp portrange 10-100`
