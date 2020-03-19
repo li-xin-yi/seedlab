@@ -59,7 +59,7 @@ Ref to the [documentation](https://scapy.readthedocs.io/en/latest/usage.html#gen
 
 ## Task 1.2
 
-```py
+```{.python}
 >>> from scapy.all import *
 >>> a = IP(src="x.x.x.x") # replace it with any ip address you want to send packets from
 >>> b = ICMP() 
@@ -69,7 +69,7 @@ Ref to the [documentation](https://scapy.readthedocs.io/en/latest/usage.html#gen
 
 ## Task 1.3
 
-```py
+```{.python}
 from scapy.all import *
 
 for i in range(1,65):
@@ -77,7 +77,7 @@ for i in range(1,65):
     send(a/ICMP())
 ```
 
-And with wireshark, we can capture time-to-live exceeded error message packets from different sources, which are routers
+And with Wireshark, we can capture time-to-live exceeded error message packets from different sources, which are routers
 
 ![Traceroute](./router_capture.png)
 
@@ -89,7 +89,7 @@ From machine `10.0.2.4` run `ping 172.17.56.66`, which is an unreachable IP addr
 
 Then on the machine `10.0.2.15` execute such a program ([`sniff_spoof_icmp.py`](./sniff_spoof_icmp.py)) as below:
 
-```py
+```{.python}
 #!/usr/bin/python3
 from scapy.all import *
 
@@ -162,7 +162,7 @@ To simplify the problem, I suppose that on the VM `10.0.2.4` we use default teln
 telnet 10.0.2.15 -l seed
 ```
 
-Then, it asks the user to type the passward in an **interactive prompt**.
+Then, it asks the user to type the password in an **interactive prompt**.
 
 Meanwhile, on the attacker machine `10.0.2.15`. I write a program [`sniff_pwd.c`](./sniff_pwd.c) to listen on such `telnet` packets with filter ["tcp port 23 and src host 10.0.2.4"](./sniff_pwd.c#L176).
 
@@ -191,3 +191,153 @@ if (ip->iph_protocol == IPPROTO_TCP)
 Finally, image typing `seed` letter by letter as a password on VM `10.0.2.4`. Once a letter is pressed, a TCP packet is sent from `10.0.2.4`, the attacker can sniff a packet with the letter at the end of the data field.
 
 ![Get the typed password letters](./telnet.png)
+
+## Task 2.2
+
+### Task 2.2A
+
+For raw socket programming, to construct an IP header by providing information about the destination, I just need to set the family information and the destination IP address. Then the kernel can get the corresponding MAC address on the same subnet via ARP requests and fill all information out.
+
+For instance, I construct an IP header in [`spoof.c`](./spoof.c#L30):
+
+```c
+sin.sin_family = AF_INET;
+sin.sin_addr.s_addr = inet_addr("10.0.2.4");
+sin.sin_port = htons(9090);
+```
+
+Using Wireshark, I observe that the IP packet is sent as:
+
+![](./spoof_ip_packet.png)
+
+### Task 2.2B
+
+For instance, on behalf of VM `10.0.2.4`, to spoof an ICMP echo request packet to host `216.58.192.142`. I construct the headers as (more details can be found in [`spoof_icmp.c`](./spoof_icmp.c)):
+
+```c
+struct icmpheader *icmp = (struct icmpheader *)(buffer + sizeof(struct ipheader));
+icmp->icmp_type = 8; //ICMP Type: 8 is request, 0 is reply.
+
+// Calculate the checksum for integrity
+icmp->icmp_chksum = 0;
+icmp->icmp_chksum = in_cksum((unsigned short *)icmp,
+                              sizeof(struct icmpheader));
+
+struct ipheader *ip = (struct ipheader *)buffer;
+ip->iph_ver = 4;
+ip->iph_ihl = 5;
+ip->iph_ttl = 20;
+ip->iph_sourceip.s_addr = inet_addr("10.0.2.4");
+ip->iph_destip.s_addr = inet_addr("216.58.192.142");
+ip->iph_protocol = IPPROTO_ICMP;
+ip->iph_len = htons(sizeof(struct ipheader) +
+                    sizeof(struct icmpheader));
+```
+
+Capture the packet via Wireshark:
+
+![](./spoof_ping_request.png)
+
+
+### Questions
+
+#### Question 4.
+
+The question is a little ambiguous. 
+
+Of course, I can set the IP packet length field as any value in a program. But when using `IP_HDRINCL`(ref to https://linux.die.net/man/7/raw), it will be filled in with the actual value (`len(ipheader)`+`len(data)`) on sending regardless of what it is set as before.
+
+Besides, in [Task 2.2B](#task-22b), we finally send the packet with [`send_raw_ip_packet()`](./spoof_icmp.c#84), in which it ends with:
+
+```c
+sendto(sock, ip, ntohs(ip->iph_len), 0,
+       (struct sockaddr *)&dest_info, sizeof(dest_info));
+```
+
+The third argument of `sendto()` must be precisely specified as the actual size. Therefore, to verify the issue mentioned above, I edit it as:
+```c
+int ip_size = ntohs(ip->iph_len);
+ip->iph_len = 0; // or whatever value you like
+
+sendto(sock, ip, ip_size, 0,
+        (struct sockaddr *)&dest_info, sizeof(dest_info));
+```
+Wireshark can still capture an ICMP echo request packet.
+
+#### Question 5.
+
+There is always no need to fill out the IP checksum field by hand (also ref to https://linux.die.net/man/7/raw). However, when sending an ICMP packet (e.g. [Task 2.2B](#task-22b)), the ICMP checksum field will not be filled out automatically. Even though the packet can be sent with an incorrect checksum, upon receiving the packet, the dst host first checks the checksum. If the checksum is not set properly, the host may consider it as an invalid request and drop the packet. So you will not capture the reply packet.
+
+
+#### Question 6.
+
+Use `gdb` in normal user shell to find out where the root privilege is required:
+
+```
+gdb -q spoof
+Reading symbols from spoof...(no debugging symbols found)...done.
+gdb-peda$ b sendto
+Breakpoint 1 at 0x8048420
+gdb-peda$ r
+Starting program: /home/seed/Documents/packet/spoof 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/i386-linux-gnu/libthread_db.so.1".
+socket() error: Operation not permitted
+[Inferior 1 (process 4468) exited with code 0377]
+Warning: not running or target is remote
+```
+
+It gets stuck with the fact that a raw socket cannot be created by a normal user because a raw socket can read any packet copied from kernel space. In short, it can read packets of all users.
+
+## Task 2.3
+
+Modify the function `got_packet()` in [`sniff.c`](./sniff.c#L6) : Add the processing of spoofing an ICMP echo reply packet with the same ICMP `id`, ICMP `seq`, reversed src and dst IP in IP header with the captured packet. For instance, its my implement of critical part in [`sniff_and_then_spoof.c`](./sniff_and_then_spoof.c#L98):
+
+```c
+void got_packet(u_char *args, const struct pcap_pkthdr *header,
+                const u_char *packet)
+{
+    printf("Got a packet\n");
+    char buffer[1500];
+    struct ipheader *captured_ip = (struct ipheader *)(packet + sizeof(struct ethheader));
+    struct icmpheader *captured_icmp = (struct icmpheader *)(packet + sizeof(struct ethheader) + sizeof(struct ipheader));
+
+    memset(buffer, 0, 1500);
+
+    struct icmpheader *icmp = (struct icmpheader *)(buffer + sizeof(struct ipheader));
+    icmp->icmp_type = 0; //ICMP Type: 8 is request, 0 is reply.
+    // Calculate the checksum for integrity
+    icmp->icmp_id = captured_icmp->icmp_id;
+    icmp->icmp_seq = captured_icmp->icmp_seq;
+    icmp->icmp_chksum = 0;
+    icmp->icmp_chksum = in_cksum((unsigned short *)icmp,
+                                 sizeof(struct icmpheader));
+
+    struct ipheader *ip = (struct ipheader *)buffer;
+    ip->iph_ver = 4;
+    ip->iph_ihl = captured_ip->iph_ihl;
+    ip->iph_ttl = 20;
+    ip->iph_sourceip = captured_ip->iph_destip;
+    ip->iph_destip = captured_ip->iph_sourceip;
+    ip->iph_protocol = IPPROTO_ICMP;
+    ip->iph_len = htons(sizeof(struct ipheader) +
+                        sizeof(struct icmpheader));
+    send_raw_ip_packet(ip);
+    printf("Send out spoofed reply\n");
+}
+```
+
+Similar to [Task 1.4](#task-14), when VM `10.0.2.4` `ping`s an unreablable host `172.17.56.66`, run program [`sniff_and_then_spoof`](./sniff_and_then_spoof.c) on VM `10.0.2.15` with root privilege. The spoofed echo replies are accepted as replies from the destination host.
+
+![Receive fake responses](./spoof_response_c.png)
+
+
+
+
+
+
+
+
+
+
+
