@@ -59,7 +59,7 @@ Ref to the [documentation](https://scapy.readthedocs.io/en/latest/usage.html#gen
 
 ## Task 1.2
 
-```{.python}
+```python
 >>> from scapy.all import *
 >>> a = IP(src="x.x.x.x") # replace it with any ip address you want to send packets from
 >>> b = ICMP() 
@@ -69,7 +69,7 @@ Ref to the [documentation](https://scapy.readthedocs.io/en/latest/usage.html#gen
 
 ## Task 1.3
 
-```{.python}
+```python
 from scapy.all import *
 
 for i in range(1,65):
@@ -89,7 +89,7 @@ From machine `10.0.2.4` run `ping 172.17.56.66`, which is an unreachable IP addr
 
 Then on the machine `10.0.2.15` execute such a program ([`sniff_spoof_icmp.py`](./sniff_spoof_icmp.py)) as below:
 
-```{.python}
+```python
 #!/usr/bin/python3
 from scapy.all import *
 
