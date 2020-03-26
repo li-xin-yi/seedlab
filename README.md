@@ -34,7 +34,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ] SQL Injection Attack Lab
 - [ ] Network Security
     - [x] [Packet Sniffing & Spoofing Lab](./Packet-Sniffing-and-Spoofing)
-    - [ ] [TCP Attack Lab](./TCP-IP-Attack)
+    - [x] [TCP Attack Lab](./TCP-IP-Attack)
     - [ ] Linux Firewall Lab
     - [ ] Bypassing Firewall using VPN
     - [ ] Local DNS Attack Lab
