@@ -35,7 +35,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
 - [ ] Network Security
     - [x] [Packet Sniffing & Spoofing Lab](./Packet-Sniffing-and-Spoofing)
     - [x] [TCP Attack Lab](./TCP-IP-Attack)
-    - [ ] Linux Firewall Lab
+    - [ ] [Linux Firewall Lab](./Firewall-Exploration)
     - [ ] Bypassing Firewall using VPN
     - [ ] Local DNS Attack Lab
     - [ ] Remote DNS Cache Poisoning Attack Lab
