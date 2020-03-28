@@ -1,0 +1,75 @@
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/netfilter.h>
+#include <linux/netfilter_ipv4.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
+#include <linux/string.h>
+
+static struct nf_hook_ops FilterHookRule[10];
+static int regist_num = 0;
+
+int eq_daddr(const struct iphdr *iph, const char *ip_addr)
+{
+    //check if the dst ip address equals the given address
+    char source[16];
+    snprintf(source, 16, "%pI4", &iph->daddr);
+    if (strcmp(source, ip_addr) == 0)
+        return 1;
+    return 0;
+}
+
+int eq_saddr(const struct iphdr *iph, const char *ip_addr)
+{
+    //check if the src ip address equals the given address
+    char source[16];
+    snprintf(source, 16, "%pI4", &iph->saddr);
+    if (strcmp(source, ip_addr) == 0)
+        return 1;
+    return 0;
+}
+
+unsigned int telnetFilter_1(void *priv, struct sk_buff *skb,
+                            const struct nf_hook_state *state)
+// rule for task 1.1: Prevent A from doing `telnet` to Machine B
+{
+    struct iphdr *iph;
+    struct tcphdr *tcph;
+
+    iph = ip_hdr(skb);
+    tcph = (void *)iph + iph->ihl * 4;
+
+    if (iph->protocol == IPPROTO_TCP && tcph->dest == htons(23) && eq_daddr(iph, "10.0.2.4") && eq_saddr(iph, "10.0.2.15"))
+    {
+        printk(KERN_INFO "Dropping telnet from %pI4 packet to %pI4\n", &iph->saddr, &iph->daddr);
+        return NF_DROP;
+    }
+    else
+    {
+        return NF_ACCEPT;
+    }
+}
+
+int setUpFilter(void)
+{
+    int i;
+    printk(KERN_INFO "Registering filters.\n");
+    FilterHookRule[0] = (struct nf_hook_ops){.hook = telnetFilter_1, .hooknum = NF_INET_LOCAL_OUT, .pf = PF_INET, .priority = NF_IP_PRI_FIRST};
+    regist_num = 1;
+
+    for (i = 0; i < regist_num; i++)
+        nf_register_hook(&FilterHookRule[i]);
+    return 0;
+}
+
+void removeFilter(void)
+{
+    int i;
+    printk(KERN_INFO "Filters are being removed.\n");
+    for (i = 0; i < regist_num; i++)
+        nf_unregister_hook(&FilterHookRule[i]);
+    regist_num = 0;
+}
+
+module_init(setUpFilter);
+module_exit(removeFilter);

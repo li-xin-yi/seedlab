@@ -1,6 +1,6 @@
 # Seedlab
 
-Records & Reports for seedlab (https://seedsecuritylabs.org/) on Ubuntu 16.04
+Records & Reports for Seedlabs (https://seedsecuritylabs.org/) on Ubuntu 16.04
 
 ---
 
@@ -11,6 +11,13 @@ To generate `pdf` README of each lab, enter the corresponding folder and use
 ```
 pandoc -s -listings -H ../code_style.tex -o readme.pdf README.MD
 ```
+
+---
+
+## Thanks to
+
+- Some code from the seed book: https://github.com/kevin-w-du/BookCode
+- Figures in the seed book: https://www.handsonsecurity.net/files/misc/SEEDBook_figs_2nd.pdf 
 
 ---
 

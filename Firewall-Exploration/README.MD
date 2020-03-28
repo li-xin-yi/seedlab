@@ -58,4 +58,11 @@ Use `ping` or `traceroute` to get one of the host IP address:
 sudo ufw deny out from 10.0.2.15 to host_ip port 80
 ```
 
-**Note**: As the [answer](https://askubuntu.com/a/270000) explains, It is impossible to stop the accessing to a domain.
+**Note**: As this [answer](https://askubuntu.com/a/270000) explains, It is impossible to stop the accessing to a domain.
+
+# Task 4
+
+From the [programming manual](https://netfilter.org/documentation/HOWTO/netfilter-hacking-HOWTO-4.html) of `netfilter` module.
+
+**Note**: `hooknum` argument, namely hook type, is not consistent with the idenfiers in the book. Please read their actual definition (alias `enum`) in [linux/netfilter.h](https://elixir.bootlin.com/linux/v4.5/source/include/uapi/linux/netfilter.h#L46).
+
