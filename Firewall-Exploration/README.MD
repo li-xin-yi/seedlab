@@ -18,7 +18,7 @@ All commands run on the VM `10.0.2.15`, and modify Line 11 in its `/etc/default/
 DEFAULT_INPUT_POLICY="ACCEPT"
 ```
 
-Or simly use the command:
+Or simply use the command:
 
 ```
 sudo ufw default allow incoming
@@ -52,17 +52,139 @@ sudo ufw deny in from 10.0.2.4 to 10.0.2.15 port 23
 
 ## Prevent A from visiting an external web site
 
-Use `ping` or `traceroute` to get one of the host IP address:
+Use `ping` or `traceroute` to get one of the host IP address and block the corresponding `HTTP`/`HTTPS` connections:
 
 ```
 sudo ufw deny out from 10.0.2.15 to host_ip port 80
+sudo ufw deny out from 10.0.2.15 to host_ip port 443
 ```
 
 **Note**: As this [answer](https://askubuntu.com/a/270000) explains, It is impossible to stop the accessing to a domain.
 
-# Task 4
+# Task 2
 
-From the [programming manual](https://netfilter.org/documentation/HOWTO/netfilter-hacking-HOWTO-4.html) of `netfilter` module.
+From the [programming manual](https://netfilter.org/documentation/HOWTO/netfilter-hacking-HOWTO-4.html) of `netfilter` module, I can implement a simplified firewall program as [`packet_filter.c`](./packet_filter/packet_filter.c)
 
-**Note**: `hooknum` argument, namely hook type, is not consistent with the idenfiers in the book. Please read their actual definition (alias `enum`) in [linux/netfilter.h](https://elixir.bootlin.com/linux/v4.5/source/include/uapi/linux/netfilter.h#L46).
+For each rule, a callback function is defined to filter packets meeting some specified conditions.
 
+For example, the function for [task 1.1](#prevent-a-from-doing-telnet-to-machine-b) can be defined as [`telnetFilter_1()`](./packet_filter/packet_filter.c#L33)
+
+```c
+unsigned int telnetFilter_1(void *priv, struct sk_buff *skb,
+                            const struct nf_hook_state *state)
+// rule for task 1.1: Prevent A from doing `telnet` to Machine B
+{
+    struct iphdr *iph;
+    struct tcphdr *tcph;
+
+    iph = ip_hdr(skb);
+    tcph = (void *)iph + iph->ihl * 4;
+
+    if (iph->protocol == IPPROTO_TCP && tcph->dest == htons(23) && eq_daddr(iph, "10.0.2.4") && eq_saddr(iph, "10.0.2.15"))
+    {
+        printk(KERN_INFO "Dropping telnet from %pI4 packet to %pI4\n", &iph->saddr, &iph->daddr);
+        return NF_DROP;
+    }
+    else
+    {
+        return NF_ACCEPT;
+    }
+}
+```
+
+Similarly, the `if` statement can be replaced by other rules to construct more filters.
+
+The `if`condition in [`telnetFilter_2()`](./packet_filter/packet_filter.c#L54) for [task 1.2](#prevent-b-from-doing-telnet-to-machine-a):
+
+```c
+if (iph->protocol == IPPROTO_TCP && tcph->dest == htons(23) && eq_daddr(iph, "10.0.2.15") && eq_saddr(iph, "10.0.2.4"))
+```
+
+Assume that we intend to block machine A from opening the website: http://notebook.xyli.me/. Before constructing the rule, we utilize Wireshark to get its 2 host IP address: `104.18.21.226` and `103.235.46.191`.
+
+Based on the knowledge, the `if` condition in ['block_xyli_me'](./packet_filter/packet_filter.c#L75) for [task 1.3](#prevent-a-from-visiting-an-external-web-site) should be:
+
+```c
+if ((tcph->dest == htons(80) || tcph->dest == htons(443)) 
+&& (eq_daddr(iph, "104.18.21.226") || eq_daddr(iph,"103.235.46.191")) 
+&& eq_saddr(iph, "10.0.2.15"))
+```
+
+To make it scalable for at least 5 filter rules, a `nf_hook_ops` array should be declared with a large size and `regist_num` is maintained to track the actual amount of filters used in the firewall:
+
+```c
+#define MAX_RULE_NUM 10
+
+static struct nf_hook_ops FilterHookRule[MAX_RULE_NUM];
+static int regist_num = 0;
+```
+
+Regist those hooks with functions above in function[setUpFilter()](./packet_filter/packet_filter.c#L98):
+
+```c
+int setUpFilter(void)
+{
+    int i;
+    printk(KERN_INFO "Registering filters.\n");
+    FilterHookRule[0] = (struct nf_hook_ops){.hook = telnetFilter_1, .hooknum = NF_INET_LOCAL_OUT, .pf = PF_INET, .priority = NF_IP_PRI_FIRST};
+    FilterHookRule[1] = (struct nf_hook_ops){.hook = telnetFilter_2, .hooknum = NF_INET_LOCAL_IN, .pf = PF_INET, .priority = NF_IP_PRI_FIRST};
+    FilterHookRule[2] = (struct nf_hook_ops){.hook = block_xyli_me, .hooknum = NF_INET_LOCAL_OUT, .pf = PF_INET, .priority = NF_IP_PRI_FIRST};
+
+    // set the amount of filter rules
+    regist_num = 3;
+
+    for (i = 0; i < regist_num; i++)
+        nf_register_hook(&FilterHookRule[i]);
+    return 0;
+}
+```
+
+When extending the module with more rules, just focus to fill out `hooknum` and `hook`(i.e. function definition) fields like this.
+
+**Note**: `hooknum` field, namely hook type, is not consistent with the identifiers in the book. Please read their actual definition (alias `enum`) in [`linux/netfilter.h`](https://elixir.bootlin.com/linux/v4.5/source/include/uapi/linux/netfilter.h#L46).
+
+Define an unregist function as well and associate those functions in the module.
+
+```c
+void removeFilter(void)
+{
+    int i;
+    printk(KERN_INFO "Filters are being removed.\n");
+    //unregist hooks one by one
+    for (i = 0; i < regist_num; i++)
+        nf_unregister_hook(&FilterHookRule[i]);
+    regist_num = 0;
+}
+
+module_init(setUpFilter);
+module_exit(removeFilter);
+
+MODULE_LICENSE("GPL");
+```
+
+Finally, write a [`makefile`](./packet_filter/makefile) and type `make` to compile:
+
+```makefile
+obj-m += packet_filter.o
+all:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+clean:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+```
+
+Install the output module `packet_filter.ko` into the kernel:
+
+```
+sudo insmod packet_filter.ko
+```
+
+Now, you can observe the firewall works, and log can be viewed with command `dmseg`:
+
+![](filter_log.png)
+
+Don't forget to uninstall the firewall after lab:
+
+```
+sudo rmmod packet_filter
+```
