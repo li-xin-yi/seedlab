@@ -188,3 +188,16 @@ Don't forget to uninstall the firewall after lab:
 ```
 sudo rmmod packet_filter
 ```
+
+# Task 3
+
+## Block all the outgoing traffic to external telnet servers.
+
+Set up another machine C: `10.0.2.5`.
+
+On machine A:
+
+```
+sudo deny out from 10.0.2.15 to any port 23 
+sudo ufw enable
+```
