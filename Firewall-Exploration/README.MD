@@ -183,7 +183,7 @@ Now, you can observe the firewall works, and log can be viewed with command `dms
 
 ![](filter_log.png)
 
-Don't forget to uninstall the firewall after lab:
+Don't forget to uninstall the firewall after the lab:
 
 ```
 sudo rmmod packet_filter
@@ -193,11 +193,75 @@ sudo rmmod packet_filter
 
 ## Block all the outgoing traffic to external telnet servers.
 
-Set up another machine C: `10.0.2.5`.
+Set up another VM C: `10.0.2.5`.
 
 On machine A:
 
 ```
-sudo deny out from 10.0.2.15 to any port 23 
+sudo ufw deny out from 10.0.2.15 to any port 23 
 sudo ufw enable
 ```
+
+## Block all the outgoing traffic to `www.facebook.com`
+
+~~It's difficult because the domain has many dynamic IP addresses as hosts. For example, `ping` it at different time:~~
+
+```
+$ping www.facebook.com
+PING star-mini.c10r.facebook.com (157.240.2.35) 56(84) bytes of data.
+64 bytes from edge-star-mini-shv-01-ort2.facebook.com (157.240.2.35): icmp_seq=1 ttl=52 time=18.7 ms
+```
+
+```
+$ ping www.facebook.com
+PING star-mini.c10r.facebook.com (157.240.18.35) 56(84) bytes of data.
+64 bytes from edge-star-mini-shv-02-ort2.facebook.com (157.240.18.35): icmp_seq=1 ttl=52 time=19.3 ms
+
+```
+
+To ensure the blocking, you can use the subnet instead of a specified IP address:
+
+```
+sudo ufw deny out from 10.0.2.15 to 157.240.2.35/16
+```
+## Task 3.a: Telnet to Machine B through the firewall 
+
+**Note**: The solution given by the instruction may not work. Perhaps because `telnet` usally fails on ports other than a few certain ports (see https://aplawrence.com/DirkHart/telnet2023.html and https://superuser.com/questions/790782/using-telnet-port-number)
+
+Here is a simple alternative method:
+
+![](./demo.png)
+
+Don't do any extra port mappings. use the most naive way to `ssh` machine B
+
+```
+ssh seed@10.0.2.4
+```
+
+type the password and directly `telnet` machine C
+
+```
+telnet 10.0.2.5
+```
+
+![](./telnet_succ.png)
+
+## Task 3.b: Connect to Facebook using SSH Tunnel
+
+```
+ssh -D 500 -C seed@10.0.2.4
+```
+
+Then configure on Firefox, change the network proxy as manual proxy mode with SOCKS host: `127.0.0.1:9000`
+
+1. Now, I can open `www.facebook.com`
+
+![](./facebook.png)
+
+2. When the `ssh` connection is broken, clean the history data in the brower, the website `www.facebook.com` cannot be accessed any more.
+
+3. re-connect to machine B with `ssh` command above, the website `www.facebook.com` can be opened now.
+
+4. And using Wireshark, it shows that the actual HTTP packet is communicated between the external host of `facebook` and machine B, then our local machine A communicate with machine B by `SSH` to request the date from `facebook`:
+
+![](./proxy.png)
