@@ -6,7 +6,8 @@ date: \today{}
 
 Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Firewall.pdf
 
-Set up 2 VMs: 
+Set up 2 VMs:
+
 - A: `10.0.2.15`
 - B: `10.0.2.4`.
 
@@ -204,7 +205,7 @@ sudo ufw enable
 
 ## Block all the outgoing traffic to `www.facebook.com`
 
-~~It's difficult because the domain has many dynamic IP addresses as hosts. For example, `ping` it at different time:~~
+~~It's difficult because the domain has many dynamic IP addresses as hosts. For example, `ping` it at different times:~~
 
 ```
 $ping www.facebook.com
@@ -258,10 +259,41 @@ Then configure on Firefox, change the network proxy as manual proxy mode with SO
 
 ![](./facebook.png)
 
-2. When the `ssh` connection is broken, clean the history data in the brower, the website `www.facebook.com` cannot be accessed any more.
-
+2. When the `ssh` connection is broken, clean the history data in the browser, the website `www.facebook.com` cannot be accessed any more.
 3. re-connect to machine B with `ssh` command above, the website `www.facebook.com` can be opened now.
-
-4. And using Wireshark, it shows that the actual HTTP packet is communicated between the external host of `facebook` and machine B, then our local machine A communicate with machine B by `SSH` to request the date from `facebook`:
+4. And using Wireshark, it shows that the actual HTTP packet is communicated between the external host of `facebook` and machine B, then our local machine A communicate with machine B by `SSH` to request the data from `facebook`:
 
 ![](./proxy.png)
+
+# Task 4
+
+Assume that VM A is the internal machine which blocks `ssh` connections requested from VM B.
+
+Therefore, on VM A, run
+
+```
+sudo ufw deny in from 10.0.2.4 to 10.0.2.15 port 22
+sudo ufw deny in from 10.0.2.4 to 10.0.2.15 port 80
+```
+
+to emulate the set-up.
+
+Then we can create a reverse `ssh` tunnel on machine A:
+
+```
+ssh -R 8000:localhost:80 seed@10.0.2.4
+```
+
+Reference to [How does reverse SSH tunneling work?](https://unix.stackexchange.com/questions/46235/how-does-reverse-ssh-tunneling-work)
+
+![](./reverse_ssh.png)
+
+Keep the `ssh` connection alive and leave machine A alone.
+
+![](./web_proxy.png)
+
+We can access the web server hosted by machine A by `localhost:8000` on machine B now:
+
+![](./localhost.png)
+
+
