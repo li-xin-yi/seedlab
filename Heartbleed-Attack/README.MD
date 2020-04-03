@@ -85,6 +85,6 @@ WARNING: www.heartbleedlabelgg.com:443 returned more data than it should - serve
 ...
 ```
 
-At [Line 385](./attack.py$L385) in `attack.py`, the threshold of entire response packet length is `0x29`. The actual payload constructed by `build_heartbeat()` at [Line 205-255](./attack.py$L205) is `176/8=22`. When you set the length field as a value greater than `22`, the server will blindly copy content from the pointer of the beginning of the payload string to fit the required payload length, which may include the critical data stored on the server.
+At [Line 385](./attack.py#L385) in `attack.py`, the threshold of entire response packet length is `0x29`. The actual payload constructed by `build_heartbeat()` at [Line 205-255](./attack.py#L205) has `176/8=22` bytes. When you set the length field as a value greater than `22`, the server will blindly copy content from the pointer of the beginning of the payload string to fit the required payload length, which may include the critical data stored on the server.
 
 ![](./packet.png)
