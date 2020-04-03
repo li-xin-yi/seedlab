@@ -65,7 +65,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ] [Bypassing Firewall using VPN](./Firewall-VPN)
     - [ ] Local DNS Attack Lab
     - [ ] Remote DNS Cache Poisoning Attack Lab
-    - [ ] [*Heartbleed Attack Lab (only for `ubuntu` 16.04)*](./Heartbleed-Attack)
+    - [ ] [*Heartbleed Attack Lab (only for `ubuntu` 12.04)*](./Heartbleed-Attack)
     - [ ] VPN Lab
 - [ ] Crypto
     - [ ]  [Secret-Key Encryption Lab](./Secret-Key-EncryptionD)
