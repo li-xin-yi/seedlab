@@ -5,12 +5,13 @@
 # This file intentionally does not come with signatures.  Put your local
 # additions here.
 
+
 alert tcp any any -> any any (msg:"FOX-SRT - Flowbit - TLS-SSL Client Hello"; \
 flow:established, to_server; \
 #check if its first 2 bytes is 0x16,0x03 (handshake,tls version)
 content:"|16 03|"; depth:2;\
-#check if its 4-th byte < 2  (valid tls version can only be 0/1)
-byte_test:1, <=, 2, 3; \
+#check if its 4-th byte < 4  (valid tls version can only be 0,1,2,3)
+byte_test:1, <, 4, 3; \
 #check if the 6-th byte is 0x01 (see attack.py L105 handshake type)
 content:"|01|"; offset:5; depth:1; \
 #check if its 10-th byte is 0x03 (L111)
@@ -23,3 +24,31 @@ content:"|00 0f 00|"; \
 flowbits:set,foxsslsession; \
 threshold:type limit, track by_src, count 1, seconds 60; \
 reference:cve,2014-0160; classtype:bad-unknown; sid: 21001130; rev:9;)
+
+alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Request"; \
+#the attacker send a suspicious request
+flow:established,to_server; flowbits:isset,foxsslsession;\
+#check if first 2 bytes is 0x18 0x03
+content:"|18 03|"; depth: 2; \
+#check if 3-rd byte is <= 3
+byte_test:1, <, 4, 2; \
+#check if 6-nd byte == 1 (content type == request)
+byte_test:1, =, 1, 5; \
+#check if and the int represented by 7-th and 8-th byte (length) > 200 (L203)
+byte_test:2, >, 200, 6; \
+threshold:type limit, track by_src, count 1, seconds 600;\
+reference:cve,2014-0160; classtype:bad-unknown; sid: 21001131; rev:5;)
+
+alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Response"; \
+#the server response with a suspiciously large packet
+flow:established,to_client; flowbits:isset,foxsslsession;\
+#check if first 2 bytes is 0x18 0x03
+content:"|18 03|"; depth: 2; \
+#check if 3-rd byte is <= 3
+byte_test:1, <, 4, 2; \
+#check if 6-nd byte == 2 (content type == response)
+byte_test:1, =, 2, 5; \
+#check if and the int represented by 7-th and 8-th byte (length) > 200
+byte_test:2, >, 200, 6; \
+threshold:type limit, track by_src, count 1, seconds 600;\
+reference:cve,2014-0160; classtype:bad-unknown; sid: 21001132; rev:6;)

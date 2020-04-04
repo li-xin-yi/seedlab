@@ -51,7 +51,7 @@ It might not reveal any secret message in one single run. To get useful data, th
 
 ![](./message_body.png)
 
-## detect the attack with snort \*
+## Detect the attack with snort \*
 
 ```
 sudo gedit /etc/snort/rules/local.rules
@@ -66,8 +66,8 @@ alert tcp any any -> any any (msg:"FOX-SRT - Flowbit - TLS-SSL Client Hello"; \
 flow:established, to_server; \
 #check if its first 2 bytes is 0x16,0x03 (handshake,tls version)
 content:"|16 03|"; depth:2;\
-#check if its 4-th byte < 2  (valid tls version can only be 0/1)
-byte_test:1, <=, 2, 3; \
+#check if its 4-th byte < 4  (valid tls version can only be 0,1,2,3)
+byte_test:1, <, 4, 3; \
 #check if the 6-th byte is 0x01 (see attack.py L105 handshake type)
 content:"|01|"; offset:5; depth:1; \
 #check if its 10-th byte is 0x03 (L111)
@@ -82,18 +82,59 @@ threshold:type limit, track by_src, count 1, seconds 60; \
 reference:cve,2014-0160; classtype:bad-unknown; sid: 21001130; rev:9;)
 ```
 
-For Heartbeat Response, which is constructed at [Line 195-259](./attack.py#L195)
+For Heartbeat Request, which is constructed at [Line 195-259](./attack.py#L195)
 
 ```shell
-alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Response"; flow:established; flowbits:isset,foxsslsession;
+alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Request"; \
+#the attacker send a suspicious request
+flow:established,to_server; flowbits:isset,foxsslsession;\
 #check if first 2 bytes is 0x18 0x03
 content:"|18 03|"; depth: 2; \
 #check if 3-rd byte is <= 3
-byte_test:1, <=, 3, 2;
-#check if 2-nd byte != 2
-byte_test:1, !=, 2, 1;
-byte_test:2, >, 200, 3; threshold:type limit, track by_src, count 1, seconds 600; reference:cve,2014-0160; classtype:bad-unknown; sid: 21001131; rev:5;)
+byte_test:1, <, 4, 2; \
+#check if 6-nd byte == 1 (content type == request)
+byte_test:1, =, 1, 5; \
+#check if and the int represented by 7-th and 8-th byte (length) > 200 (L203)
+byte_test:2, >, 200, 6; \
+threshold:type limit, track by_src, count 1, seconds 600;\
+reference:cve,2014-0160; classtype:bad-unknown; sid: 21001131; rev:5;)
 ```
+
+~~Or use a more flexible length check like:~~
+```shell
+#check if the actual payload size is same as the payload specified in corresponding length field
+byte_extract: 2, 6, payload_len; \
+dszie: < payload_len; \
+```
+which is **not supported** by the plain syntax in `snort` rule.
+
+For Heartbeat Response, first, we capture a sample heartbeat response using Wireshark:
+
+![](./heartbleed_response.png)
+
+Due to the outdated version, Wireshark cannot parse the packet format correctly. Please reference [RFC6520](https://tools.ietf.org/html/rfc6520#page-5), [The Illustrated TLS Connection](https://tls.ulfheim.net/), [Wikipedia](https://en.wikipedia.org/wiki/Transport_Layer_Security#Protocol_details) and [this blog](https://blog.didierstevens.com/2014/04/09/heartbleed-packet-capture/):
+
+![](https://didierstevens.files.wordpress.com/2014/04/20140409-231823.png)
+
+Then write a rule to detect Heartbeat Responses:
+
+```shell
+alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Response"; \
+#the server response with a suspiciously large packet
+flow:established,to_client; flowbits:isset,foxsslsession;\
+#check if first 2 bytes is 0x18 0x03
+content:"|18 03|"; depth: 2; \
+#check if 3-rd byte is <= 3
+byte_test:1, <, 4, 2; \
+#check if 6-nd byte == 2 (content type == response)
+byte_test:1, =, 2, 5; \
+#check if and the int represented by 7-th and 8-th byte (length) > 200
+byte_test:2, >, 200, 6; \
+threshold:type limit, track by_src, count 1, seconds 600;\
+reference:cve,2014-0160; classtype:bad-unknown; sid: 21001132; rev:6;)
+```
+
+Save the rules above.
 
 Start `snort` **with `-k none`**
 
@@ -115,6 +156,10 @@ config checksum_mode: none
 ```
 
 Otherwise, `snort` can only detect the incoming TCP packets (see [this question](https://serverfault.com/questions/554713/snort-not-detecting-outgoing-traffic))
+
+Finally, if `snort` runs normally, after launching the attack with another terminal, `snort` can detect such attacks as:
+
+![](./snort_detect.png)
 
 # Task 2
 
