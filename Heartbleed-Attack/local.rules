@@ -1,0 +1,25 @@
+# $Id: local.rules,v 1.11 2004/07/23 20:15:44 bmc Exp $
+# ----------------
+# LOCAL RULES
+# ----------------
+# This file intentionally does not come with signatures.  Put your local
+# additions here.
+
+alert tcp any any -> any any (msg:"FOX-SRT - Flowbit - TLS-SSL Client Hello"; \
+flow:established, to_server; \
+#check if its first 2 bytes is 0x16,0x03 (handshake,tls version)
+content:"|16 03|"; depth:2;\
+#check if its 4-th byte < 2  (valid tls version can only be 0/1)
+byte_test:1, <=, 2, 3; \
+#check if the 6-th byte is 0x01 (see attack.py L105 handshake type)
+content:"|01|"; offset:5; depth:1; \
+#check if its 10-th byte is 0x03 (L111)
+content:"|03|"; offset:9; depth:1;\
+#check if 11-th byte < 2 (valid tls version can only be 0/1)
+byte_test:1, <=, 2, 10; \
+#check if contains [0x00 0x0f 0x00] (L187, heartbeat extension)
+content:"|00 0f 00|"; \
+# don't use flowbits as noalert, or it will produce NO ALERT
+flowbits:set,foxsslsession; \
+threshold:type limit, track by_src, count 1, seconds 60; \
+reference:cve,2014-0160; classtype:bad-unknown; sid: 21001130; rev:9;)

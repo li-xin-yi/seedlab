@@ -1,4 +1,12 @@
 # Seedlab
+[![platform](https://img.shields.io/static/v1?label=ubuntu&message=16.04&color=critical&style=flat-square)](https://seedsecuritylabs.org/lab_env.html/)
+[![pandoc](https://img.shields.io/static/v1?label=pandoc&message=2.9.1.1&color=yellowgreen&style=flat-square)](https://pandoc.org/)
+[![texlive](https://img.shields.io/static/v1?label=TeXLive&message=2019&color=informational&style=flat-square)](https://www.tug.org/texlive/)
+![codesize](https://img.shields.io/github/languages/code-size/li-xin-yi/seedlab?style=flat-square)
+![](https://img.shields.io/github/commit-activity/m/li-xin-yi/seedlab?color=ffb7c5&style=flat-square)
+![report doc](https://img.shields.io/static/v1?label=docs&message=PDF&color=A9A9A9&style=flat-square)
+![license](https://img.shields.io/github/license/li-xin-yi/seedlab?style=flat-square)
+[![twitter](https://img.shields.io/twitter/follow/yangzhou301?label=Xinyi%20Li%40yangzhou301&style=flat-square)](https://twitter.com/yangzhou301)
 
 Records & Reports for Seedlabs (https://seedsecuritylabs.org/) on Ubuntu 16.04
 
@@ -65,7 +73,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ] [Bypassing Firewall using VPN](./Firewall-VPN)
     - [ ] Local DNS Attack Lab
     - [ ] Remote DNS Cache Poisoning Attack Lab
-    - [ ] [*Heartbleed Attack Lab (only for `ubuntu` 12.04)*](./Heartbleed-Attack)
+    - [ ] [*Heartbleed Attack Lab (only for Ubuntu 12.04)*](./Heartbleed-Attack)
     - [ ] VPN Lab
 - [ ] Crypto
     - [ ]  [Secret-Key Encryption Lab](./Secret-Key-EncryptionD)

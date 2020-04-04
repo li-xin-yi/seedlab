@@ -102,7 +102,7 @@ def build_client_hello(tls_ver):
 
 0x00, 0xdc,         # Length
 
-# Handshake header
+# Handshake header ( 6 bytes)
 
 0x01,               # Type (0x01 for ClientHello)
 
@@ -110,7 +110,7 @@ def build_client_hello(tls_ver):
 
 0x03, tls_ver,         # TLS Version
 
-# Random (32 byte)
+# Random (32 bytes)
 
 0x53, 0x43, 0x5b, 0x90, 0x9d, 0x9b, 0x72, 0x0b,
 
