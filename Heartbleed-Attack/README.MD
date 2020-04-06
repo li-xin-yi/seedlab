@@ -53,6 +53,15 @@ It might not reveal any secret message in one single run. To get useful data, th
 
 ## Detect the attack with snort \*
 
+First, install `snort` on the current VM:
+
+```
+sudo apt-get install snort
+```
+Don't do any extra dependency upgrades, or the  vulnerability might be patched.
+
+You may have to set `$HOME_NET` as `10.0.2.0/16`  in `/etc/snort/snort.conf `.
+
 ```
 sudo gedit /etc/snort/rules/local.rules
 ```
@@ -94,7 +103,7 @@ content:"|18 03|"; depth: 2; \
 byte_test:1, <, 4, 2; \
 #check if 6-nd byte == 1 (content type == request)
 byte_test:1, =, 1, 5; \
-#check if and the int represented by 7-th and 8-th byte (length) > 200 (L203)
+#check if and the int represented by 7-th and 8-th byte (length) > 200 (L209)
 byte_test:2, >, 200, 6; \
 threshold:type limit, track by_src, count 1, seconds 600;\
 reference:cve,2014-0160; classtype:bad-unknown; sid: 21001131; rev:5;)
@@ -104,7 +113,7 @@ reference:cve,2014-0160; classtype:bad-unknown; sid: 21001131; rev:5;)
 ```shell
 #check if the actual payload size is same as the payload specified in corresponding length field
 byte_extract: 2, 6, payload_len; \
-dszie: < payload_len; \
+dsize: < payload_len; \
 ```
 which is **not supported** by the plain syntax in `snort` rule.
 
