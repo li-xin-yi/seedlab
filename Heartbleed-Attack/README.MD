@@ -70,7 +70,7 @@ Ref to the [rule syntax manual](http://manual-snort-org.s3-website-us-east-1.ama
 
 For Client Hello packet, which is built at [Line 93-189](./attack.py#L93)
 
-```shell
+```sh
 alert tcp any any -> any any (msg:"FOX-SRT - Flowbit - TLS-SSL Client Hello"; \
 flow:established, to_server; \
 #check if its first 2 bytes is 0x16,0x03 (handshake,tls version)
@@ -93,7 +93,7 @@ reference:cve,2014-0160; classtype:bad-unknown; sid: 21001130; rev:9;)
 
 For Heartbeat Request, which is constructed at [Line 195-259](./attack.py#L195)
 
-```shell
+```sh
 alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Request"; \
 #the attacker send a suspicious request
 flow:established,to_server; flowbits:isset,foxsslsession;\
@@ -110,7 +110,8 @@ reference:cve,2014-0160; classtype:bad-unknown; sid: 21001131; rev:5;)
 ```
 
 ~~Or use a more flexible length check like:~~
-```shell
+
+```sh
 #check if the actual payload size is same as the payload specified in corresponding length field
 byte_extract: 2, 6, payload_len; \
 dsize: < payload_len; \
@@ -127,7 +128,7 @@ Due to the outdated version, Wireshark cannot parse the packet format correctly.
 
 Then write a rule to detect Heartbeat Responses:
 
-```shell
+```sh
 alert tcp any any -> any any (msg:"FOX-SRT - Suspicious - TLS-SSL Large Heartbeat Response"; \
 #the server response with a suspiciously large packet
 flow:established,to_client; flowbits:isset,foxsslsession;\
@@ -208,3 +209,60 @@ WARNING: www.heartbleedlabelgg.com:443 returned more data than it should - serve
 At [Line 385](./attack.py#L385) in `attack.py`, the threshold of the entire response packet length is `0x29`. The actual payload constructed by `build_heartbeat()` at [Line 205-255](./attack.py#L205) has `176/8=22` bytes. When you set the length field as a value greater than `22`, the server will blindly copy content from the pointer of the beginning of the payload string to fit the required payload length, which may include the critical data stored on the server.
 
 ![](./packet.png)
+
+# Task 3
+
+On the server, do:
+
+```
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+It may take a long time.
+
+## Task 3.1
+
+After patched, the attack fails. it will send no heartbeat response to a heartbeat request even if the length is set to a value `<=22`. It only gives a response with payload when `23<=length<=45`.
+
+![](./patched.png)
+
+![](./no_response.png)
+
+![](./45.png)
+
+## Task 3.2
+
+The pseudo-code snippet [response.c](./response.c) looks awkward.
+
+To guarantee pointer `pl` pointing to the payload content, a shift operation should take place before [Line 21](./response.c#L21) or just modify the line as:
+
+```c
+pl = p + 2;   
+```
+
+and it's similar to the response construction, add it before [Line 36](./response.c#L36)
+
+```
+bp += 2;
+```
+
+Alright. The most significant modification to patch the heartbleed vulnerability is to add a **boundary check** upon receiving a heartbeat request.
+
+In other words, add the check like:
+
+```c
+unsigned int payload_length = sizeof(p);
+...
+n2s(p, payload);
+if(payload > payload_length)
+    payload = payload_length; // or juest exit 
+...
+```
+
+> Moreover, please comment on the following discussions by Alice, Bob, and Eva regarding the fundamental cause of the Heartbleed vulnerability: Alice thinks the fundamental cause is missing the boundary checking during the buffer copy; Bob thinks the cause is missing the user input validation; Eva thinks that we can just delete the length value from the packet to solve everything.
+
+
+1. For Alice: The vulnerability is directly caused by the lack of boundary checking during the buffer copy as Alice said. OpenSSL team also reported it as an issue that attributes to the reason at that time. (see [Fixed OpenSSL](https://www.openssl.org/news/secadv/20140407.txt))
+2. For Bob: It's a reasonable idea to normalize and validate user inputs. However, the bits in packets, including length field values, might be corrupted as any unexpected bits even without malicious intentions during transmission. Apart from the validation done on the server, it is still critical to implement the checks on the server before responses.
+3. For Eva: Though the length declared by some fields in the packet is not so trustworthy, it is still helpful to some extent, such as packet verification (see [this question](https://security.stackexchange.com/questions/55606/heartbleed-why-does-the-client-supply-the-length-of-the-message-at-all)).By the way, even though the OpenSSL team planned to remove heartbeat content packet in the later versions of TLS/SSL and it finally came true (see [this issue](https://github.com/openssl/openssl/issues/4856) and [The Heartbleed Bug](https://heartbleed.com/)), the payload length fields (or something similar) remain in other SSL/TLS message packet structures. (see [Wikipedia](https://en.wikipedia.org/wiki/Transport_Layer_Security#Protocol_details) and [The Illustrated TLS Connection](https://tls.ulfheim.net/))
