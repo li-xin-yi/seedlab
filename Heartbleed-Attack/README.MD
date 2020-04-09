@@ -256,7 +256,7 @@ unsigned int payload_length = sizeof(p);
 ...
 n2s(p, payload);
 if(payload > payload_length)
-    payload = payload_length; // or juest exit 
+    payload = payload_length; // or just exit 
 ...
 ```
 
