@@ -4,6 +4,8 @@ author: Xinyi Li
 date: \today{}
 ---
 
+Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Sniffing_Spoofing.pdf
+
 # Task 1
 
 ## Task 1.1

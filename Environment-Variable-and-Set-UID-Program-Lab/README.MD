@@ -4,6 +4,8 @@ author: Xinyi Li
 date: \today{}
 ---
 
+Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Environment_Variable_and_SetUID.pdf
+
 # Task 1
 
 ```shell

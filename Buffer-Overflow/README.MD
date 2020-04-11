@@ -4,6 +4,8 @@ author: Xinyi Li
 date: \today{}
 ---
 
+Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Buffer_Overflow.pdf
+
 # Task 1
 
 The `\bin\zsh` is called. I enter a new shell.

@@ -4,6 +4,8 @@ author: Xinyi Li
 date: \today{}
 ---
 
+Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Spectre_Attack.pdf
+
 *task 1 and 2 are exactly the same tasks as what in [Meltdown Attack Lab](./Meltdown-Attack)*
 
 # Task 3

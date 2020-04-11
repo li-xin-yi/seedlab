@@ -4,6 +4,8 @@ author: Xinyi Li
 date: \today{}
 ---
 
+Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Meltdown_Attack.pdf
+
 # Task 1
 
 To compile `CacheTime.c` successfully, you should add 2 lines first to resolve the type alias:

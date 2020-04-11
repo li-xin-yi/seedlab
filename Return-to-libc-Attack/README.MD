@@ -4,6 +4,8 @@ author: Xinyi Li
 date: \today{}
 ---
 
+Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Return_to_Libc.pdf
+
 # Task 1
 
 Use the default `BUF_SIZE` as 12
