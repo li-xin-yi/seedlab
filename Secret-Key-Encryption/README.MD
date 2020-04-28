@@ -43,5 +43,5 @@ msaxhdlrgkefpnubjiztywcqvo
 Compared with letter frequency rank as  `eothasinrdluymwfgcbpkvjqxz` in modern English (see [Wikipedia](https://en.wikipedia.org/wiki/Letter_frequency))
 
 ```
-$ tr 'msaxhdlrgkefpnubjiztywcqvo' 'eothasinrdluymwfgcbpkvjqxz' < in.txt > out.txt
+$ tr 'msaxhdlrgkefpnubjiztywcqvo' 'eothasinrdluymwfgcbpkvjqxz' < ciphertext.txt > out1.txt
 ```
