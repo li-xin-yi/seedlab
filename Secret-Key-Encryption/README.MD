@@ -66,6 +66,7 @@ $openssl enc  -aes-128-cbc  -e -in plaintext.txt -out cbc_cipher.bin \
 $openssl enc  -aes-128-cbc  -d -in cbc_cipher.bin -out cbc_plain.txt \
 -K 00112233445566778889aabbccddeeff \
 -iv 0102030405060708
+#valid
 $diff plaintext.txt cbc_plain.txt
 ```
 
@@ -84,6 +85,7 @@ $openssl enc  -aes-128-cfb  -e -in plaintext.txt -out cfb_cipher.bin \
 $openssl enc  -aes-128-cfb  -d -in cfb_cipher.bin -out cfb_plain.txt \
 -K 00112233445566778889aabbccddeeff \
 -iv 0102030405060708
+#valid
 $diff plaintext.txt cfb_plain.txt
 ```
 
@@ -102,6 +104,7 @@ $openssl enc  -aes-128-ofb  -e -in plaintext.txt -out ofb_cipher.bin \
 $openssl enc  -aes-128-ofb  -d -in ofb_cipher.bin -out ofb_plain.txt \
 -K 00112233445566778889aabbccddeeff \
 -iv 0102030405060708
+#valid
 $diff plaintext.txt ofb_plain.txt
 ```
 
@@ -120,9 +123,31 @@ $openssl enc  -aes-128-ctr  -e -in plaintext.txt -out ctr_cipher.bin \
 $openssl enc  -aes-128-ctr  -d -in ctr_cipher.bin -out ctr_plain.txt \
 -K 00112233445566778889aabbccddeeff \
 -iv 0102030405060708
+#valid
 $diff plaintext.txt ctr_plain.txt
 ```
 
+# Task 3
 
 
+Encrypt the picture [`pic_original.bmp`](https://seedsecuritylabs.org/Labs_16.04/Crypto/Crypto_Encryption/files/pic_original.bmp) as 
+
+```
+openssl enc  -aes-128-ecb  -e -in pic_original.bmp -out cipher_pic.bmp \
+-K 00112233445566778889aabbccddeeff
+```
+
+Reset the header of the encrypted picture to make it openable by picture viewer:
+
+```
+head -c 54 pic_original.bmp > header
+tail -c +55 cipher_pic.bmp > body
+cat header body > full_cipher_pic.bmp
+```
+
+The output encrypted picture is displayed as:
+
+![](./full_cipher_pic.png)
+
+It seems similar to the original picture in some way. Because we break the file into blocks of size 128 bit, and the use AES algorithm to encrypt each block. If two blocks are the same in the original picture, they will remain identical in the encrypted one. 
 
