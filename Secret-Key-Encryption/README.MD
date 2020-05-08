@@ -151,3 +151,35 @@ The output encrypted picture is displayed as:
 
 It seems similar to the original picture in some way. Because we break the file into blocks of size 128 bit, and the use AES algorithm to encrypt each block. If two blocks are the same in the original picture, they will remain identical in the encrypted one. 
 
+# Task 4
+
+```sh
+echo -n "123456" > test.txt
+ls -ld test.txt
+openssl enc  -aes-128-ecb  -e -in test.txt -out output.bin \
+-K 00112233445566778889aabbccddeeff
+ls -ld output.bin 
+```
+It shows that `test.txt` has 6 bytes while `output.bin` has 16. Padding occurs during ECB encryption.
+
+Similar, try other modes by replacing `-aes-128-ecb` and adding the argument `-iv`
+
+```sh
+# cbc
+openssl enc  -aes-128-cbc  -e -in test.txt -out output.bin \
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+ls -ld output.bin # 16
+# cfb
+openssl enc  -aes-128-cfb  -e -in test.txt -out output.bin \
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+ls -ld output.bin #6
+# ofb
+openssl enc  -aes-128-ofb  -e -in test.txt -out output.bin \
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+ls -ld output.bin #6
+```
+
+CFB and OFB don't need padding. Because they take outputs of the previous block, which must be of the same size equal to cipher block size, as the inputs of its last cipher block encryption.
