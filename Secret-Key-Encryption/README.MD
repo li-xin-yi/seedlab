@@ -183,3 +183,44 @@ ls -ld output.bin #6
 ```
 
 CFB and OFB don't need padding. Because they take outputs of the previous block, which must be of the same size equal to cipher block size, as the inputs of its last cipher block encryption.
+
+```sh
+echo -n "12345" > f1.txt # 5 bytes
+echo -n "123456789A" > f2.txt # 10 bytes
+echo -n "0123456789ABCDEF" > f3.txt # 16 bytes
+```
+
+Encrypt 3 files with CBC mode:
+
+```sh
+openssl enc  -aes-128-cbc  -e -in f.txt -out output.bin \ # replace f.txt with actual plaintext
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+ls -ld output.bin
+```
+
+It shows that the output of `f3.txt` contains 32 bytes but the other 2 has 16 bytes.
+
+The original `f1.txt`:
+
+```sh
+$xxd -g 1 f1.txt
+00000000: 31 32 33 34 35                                   12345
+```
+
+Decrypt `output.bin` with `-nopad`:
+
+```
+openssl enc  -aes-128-cbc  -d -in output.bin -out plain_f1.txt \
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708 -nopad
+```
+
+Then the output file has 16 bytes, and:
+
+```sh
+$xxd -g 1 plain_f1.txt 
+00000000: 31 32 33 34 35 0b 0b 0b 0b 0b 0b 0b 0b 0b 0b 0b  12345...........
+```
+
+The paddings during encryption are treated as ciphertext.
