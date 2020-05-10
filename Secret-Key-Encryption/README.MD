@@ -224,3 +224,81 @@ $xxd -g 1 plain_f1.txt
 ```
 
 The paddings during encryption are treated as ciphertext.
+
+# Task 5
+
+Create a big file containing more than 1000 bytes
+
+```sh
+$python -c "print '1234567890'*100" > big_file.txt
+$-ld big_file.txt
+#1001
+```
+
+Encrypt it and then decrypt:
+
+```sh
+openssl enc  -aes-128-ecb  -e -in big_file.txt -out output.bin \
+-K 00112233445566778889aabbccddeeff 
+```
+
+Or
+
+```sh
+openssl enc  -aes-128-cbc  -e -in big_file.txt -out output.bin \ #replace cbc as cfb,ofb
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+```
+
+corrupt the 55-th(`0x37`) byte of `output.bin` as `0x00` using `bless`
+
+And then decrypt it:
+
+```sh
+openssl enc  -aes-128-ecb  -d -in output.bin -out decrypted.txt \
+-K 00112233445566778889aabbccddeeff 
+```
+
+Or
+
+```sh
+openssl enc  -aes-128-cbc  -d -in output.bin -out decrypted.txt \ #replace cbc as cfb,ofb
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+```
+
+Check their differences by [`diff.py`](./diff.py):
+
+```py
+#!/usr/bin/python3
+with open('big_file.txt', 'rb') as f:
+    f1 = f.read()
+with open('decrypted.txt', 'rb') as f:
+    f2 = f.read()
+res = 0
+for i in range(min(len(f1), len(f2))):
+    if f1[i] != f2[i]:
+        res += 1
+print("diff bytes: "+str(res+abs(len(f1)-len(f2))))
+```
+
+`diff` between the original files and decrypted files:
+
+<!-- openssl enc  -aes-128-ofb  -e -in big_file.txt -out output.bin \
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708
+
+openssl enc  -aes-128-ofb  -d -in output.bin -out decrypted.txt \
+-K 00112233445566778889aabbccddeeff \
+-iv 0102030405060708 -->
+
+
+Mode | Different bytes
+---------|----------
+ ECB | 16
+ CBC | 17
+ CFB | 17
+ OFB | 1
+
+
+
