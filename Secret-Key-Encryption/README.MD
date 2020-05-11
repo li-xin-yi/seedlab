@@ -300,5 +300,137 @@ Mode | Different bytes
  CFB | 17
  OFB | 1
 
+# Task 6
 
+## Task 6.1
 
+When plaintexts are the same, using the same IV leads to the same ciphertexts.
+
+## Task 6.2
+
+For OFB mode, If the **key** and **IV** keep unchanged, *known-plaintext attack* is feasible.
+
+Output stream can be obtained by XORing plaintext and ciphertext block by block. Similarly, to get plaintext, I can XOR plaintext and ciphertext. When sharing the same key and IV for OFB mode, the output streams are **identical** among encryptions.
+
+![](./reuse_iv.png)
+
+Assuming that we know a plaintext `p1` and its OFB ciphertext `c1`, and another OFB ciphertext `c2` with the same key and IV. But we do not know the plaintext `p2` of `c2`, to figure about it:
+
+First, get the output stream from the encryption of the first plaintext `p1`:
+
+`output_stream` = `p1` `XOR` `c1`
+
+Then get `p2` by:
+
+`p2` = `output_stream` `XOR` `c2`
+
+Reduce it to:
+
+`p2` = `p1` `XOR` `c1` `XOR` `c2`
+
+Use [`known-plaintext-attack.py`](./known-plaintext-attack.py):
+
+```py
+#!/usr/bin/python3
+from sys import argv
+
+_, first, second, third = argv
+p1 = bytearray(first,encoding='utf-8')
+c1 = bytearray.fromhex(second)
+c2 = bytearray.fromhex(third)
+p2 = bytearray(x ^ y ^ z for x, y, z in zip(p1, c1, c2))
+print(p2.decode('utf-8'))
+```
+
+On the instance of
+
+```
+Plaintext (P1): This is a known message!
+Ciphertext (C1): a469b1c502c1cab966965e50425438e1bb1b5f9037a4c159
+Plaintext (P2): (unknown to you)
+Ciphertext (C2): bf73bcd3509299d566c35b5d450337e1bb175f903fafc159
+```
+
+```sh
+known-plaintext-attack.py "This is a known message!" \
+a469b1c502c1cab966965e50425438e1bb1b5f9037a4c159 \
+bf73bcd3509299d566c35b5d450337e1bb175f903fafc159 \
+```
+
+Get `P2` as `"Order: Launch a missile!"`
+
+For CFB mode, as [its demonstration](#cipher-feedback-cfb), it is the same situation for the initial block (i.e. can get plaintext by simple `XOR`). However, if the key remains secret, the following parts of ciphertext will not be revealed.
+
+## Task 6.3
+
+I guess `p1` is `"Yes"`.
+
+So construct 
+
+`P2` = `"Yes"` `XOR` `IV` `XOR` `IV_NEXT`
+
+Where `IV` is the IV used to generate `C1` and `IV_NEXT` is the predictable IV used to encrypt the next plaintext input.
+
+In this case:
+
+```
+Encryption method: 128-bit AES with CBC mode.
+Key (in hex): 00112233445566778899aabbccddeeff (known only to Bob)
+Ciphertext (C1): bef65565572ccee2a9f9553154ed9498 (known to both)
+IV used on P1 (known to both)
+(in ascii): 1234567890123456
+(in hex) : 31323334353637383930313233343536
+Next IV (known to both)
+(in ascii): 1234567890123457
+(in hex) : 31323334353637383930313233343537
+```
+
+In practice, because the length of the payload is too short, which is required to padding according to [PKCS\#7](https://tools.ietf.org/html/rfc2315#section-10.3), We have to do some subtle adoption based on [`known-plaintext-attack.py`](./known-plaintext-attack.py) to create [`cipher_cons.py`](./cipher_cons.py):
+
+```py
+#!/usr/bin/python3
+from sys import argv
+
+_, first, second, third = argv
+p1 = bytearray(first, encoding='utf-8')
+padding = 16 - len(p1) % 16  # padding to match the block size as 128 bit
+p1.extend([padding]*padding)
+IV = bytearray.fromhex(second)
+IV_NEXT = bytearray.fromhex(third)
+p2 = bytearray(x ^ y ^ z for x, y, z in zip(p1, IV, IV_NEXT))
+print(p2.decode('utf-8'), end='')
+```
+
+```sh
+cipher_cons.py "Yes" 31323334353637383930313233343536 31323334353637383930313233343537 > p2
+```
+
+To get `c2`, query with `p2`:
+
+```sh
+openssl enc  -aes-128-cbc  -e -in p2 -out c2 \
+-K 00112233445566778899aabbccddeeff \
+-iv 31323334353637383930313233343537
+```
+
+Note that when the plaintext is a multiple of 16 bytes, it should be padded with another 16 bytes according to [PKCS\#7](https://tools.ietf.org/html/rfc2315#section-10.3) for encryption. To compare with actual `c1`, we just need the first block of `c2`:
+
+```sh
+$xxd -p c2
+bef65565572ccee2a9f9553154ed94983402de3f0dd16ce789e5475779aca405
+```
+
+Its first 16 bytes are the same as `c1`, therefore, the hypothesis holds: 
+
+`p1` = `"Yes"`
+
+Verify:
+
+```sh
+$echo -n "bef65565572ccee2a9f9553154ed9498" | xxd -r -p > c1
+$openssl enc  -aes-128-cbc  -d -in c1 -out p1 \
+-K 00112233445566778899aabbccddeeff \
+-iv 31323334353637383930313233343536
+$cat p2
+Yes
+```
