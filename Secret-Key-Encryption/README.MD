@@ -269,7 +269,7 @@ openssl enc  -aes-128-cbc  -d -in output.bin -out decrypted.txt \ #replace cbc a
 
 Check their differences by [`diff.py`](./diff.py):
 
-```py
+```python
 #!/usr/bin/python3
 with open('big_file.txt', 'rb') as f:
     f1 = f.read()
@@ -330,7 +330,7 @@ Reduce it to:
 
 Use [`known-plaintext-attack.py`](./known-plaintext-attack.py):
 
-```py
+```python
 #!/usr/bin/python3
 from sys import argv
 
@@ -387,7 +387,7 @@ Next IV (known to both)
 
 In practice, because the length of the payload is too short, which is required to padding according to [PKCS\#7](https://tools.ietf.org/html/rfc2315#section-10.3), We have to do some subtle adoption based on [`known-plaintext-attack.py`](./known-plaintext-attack.py) to create [`cipher_cons.py`](./cipher_cons.py):
 
-```py
+```python
 #!/usr/bin/python3
 from sys import argv
 
@@ -433,4 +433,58 @@ $openssl enc  -aes-128-cbc  -d -in c1 -out p1 \
 -iv 31323334353637383930313233343536
 $cat p2
 Yes
+```
+
+# Task 7
+
+```
+Plaintext (total 21 characters): This is a top secret.
+Ciphertext (in hex format): 764aa26b55a4da654df6b19e4bce00f4
+ed05e09346fb0e762583cb7da2ac93a2
+IV (in hex format): aabbccddeeff00998877665544332211
+```
+
+To find out the key from [words.txt](./words.txt), create the [`crack_key.py`](./crack_key.py) as:
+
+```python
+#!/usr/bin/python3
+from sys import argv
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+
+_, first, second, third = argv
+
+assert len(first) == 21
+data = bytearray(first, encoding='utf-8')
+ciphertext = bytearray.fromhex(second)
+iv = bytearray.fromhex(third)
+
+with open('./words.txt') as f:
+    keys = f.readlines()
+
+for k in keys:
+    k = k.rstrip('\n')
+    if len(k) <= 16:
+        key = k + '#'*(16-len(k))
+        cipher = AES.new(key=bytearray(key,encoding='utf-8'), mode=AES.MODE_CBC, iv=iv)
+        guess = cipher.encrypt(pad(data, 16))
+        if guess == ciphertext:
+            print("find the key:",key)
+            exit(0)
+
+print("cannot find the key!")
+```
+
+Then use it:
+
+```
+crack_key.py "This is a top secret." \
+764aa26b55a4da654df6b19e4bce00f4ed05e09346fb0e762583cb7da2ac93a2 \
+aabbccddeeff00998877665544332211
+```
+
+Finally, find the key:
+
+```
+find the key: Syracuse########
 ```

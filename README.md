@@ -76,7 +76,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [x] [*Heartbleed Attack Lab (only for Ubuntu 12.04)*](./Heartbleed-Attack)
     - [ ] VPN Lab
 - [ ] Crypto
-    - [ ]  [Secret-Key Encryption Lab](./Secret-Key-Encryption)
+    - [x]  [Secret-Key Encryption Lab](./Secret-Key-Encryption)
     - [ ]  Pseudo Random Number Generation Lab
     - [ ]  MD5 Collision Attack Lab
     - [ ]  RSA Encryption and Signature Lab
