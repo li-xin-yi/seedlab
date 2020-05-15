@@ -64,7 +64,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ] *Dirty COW Attack Lab*
 - [ ] *Web Security (deprecated, just used to test `snort`)*
     - [ ] Cross-Site Request Forgery Attack Lab
-    - [ ] [Cross-Site Scripting Attack Lab](./Cross-Site-Scripting-Attack/exploratory-snort.md)
+    - [ ] [Cross-Site Scripting Attack Lab](./Cross-Site-Scripting-Attack)
     - [ ] SQL Injection Attack Lab
 - [ ] Network Security
     - [x] [Packet Sniffing & Spoofing Lab](./Packet-Sniffing-and-Spoofing)
