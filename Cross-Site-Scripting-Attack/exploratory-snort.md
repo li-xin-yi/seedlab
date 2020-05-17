@@ -27,6 +27,8 @@ Then run it with
 sudo snort -A console -q -c /etc/snort/snort.conf -i enp0s3.
 ```
 
+Now, the IP address of the testing VM is set as `10.0.2.15/16`.
+
 ## Built-in rules about XSS
 
 search the folder `/etc/snort/rules/` in local by keyword `"XSS"`:
@@ -49,11 +51,30 @@ Results ([`XSS_lookup.txt`](./XSS_lookup.txt)):
 /etc/snort/rules/community-web-php.rules:alert tcp $EXTERNAL_NET any -> $HOME_NET $HTTP_PORTS (msg:"COMMUNITY WEB-PHP CubeCart XSS attack"; flow:to_server,established; uricontent:"/admin/login.php?email="; nocase; reference:url,retrogod.altervista.org/cubecart_3011_adv.html; classtype:web-application-attack; sid:100000872; rev:2;)
 ```
 
+## TCP/UDP traffic on non-standard ports
 
+Assume we want to issue warnings upon finding any TCP/UDP traffics on ports expect on own 22/23/80/443 ports:
+
+```
+alert tcp any any <> 10.0.2.4 ![22,23,80,443] (msg: "communicate on special ports";sid:1000001; rev:1;)
+alert udp any any <> 10.0.2.4 ![22,23,80,443] (msg: "communicate on special ports";sid:1000002; rev:1;)
+```
+
+Try to ping its port 4000 from VM `10.0.2.4`
+
+```
+nc -vz 10.0.2.15 4000
+```
+
+It alerts as expected:
+
+![](./4000alert.png)
 
 ## References
 
 - http://alexchaoyihuang.blogspot.com/2017/07/a-snort-rule-file-for-identifying-sql.html
 - https://www.blackhat.com/presentations/bh-usa-04/bh-us-04-mookhey/old/bh-us-04-mookhey_whitepaper.pdf
 - https://github.com/kunalgupta007/XssDetectionUsingIds
+- [Managing Security with Snort & IDS Tools: Intrusion Detection with Open Source Tools](https://books.google.com/books?id=5UKt2oWpOU0C&printsec=frontcover#v=onepage&q&f=false)
+- Tool: [Snort Rules loader](https://www.arl.wustl.edu/projects/fpx/stat_module/snortrules.html)
 
