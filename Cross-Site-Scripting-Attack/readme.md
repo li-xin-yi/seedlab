@@ -13,7 +13,7 @@ Instruction: https://seedsecuritylabs.org/Labs_16.04/PDF/Web_XSS_Elgg.pdf
 - attacker: `10.0.2.15`
 - server: `10.0.2.4`
 
-Edit the DNS record in `etc/host` on the attacker:
+Edit the DNS record in `/etc/hosts` on the attacker:
 
 ```
 10.0.2.4       www.xsslabelgg.com
@@ -276,7 +276,7 @@ Edit Boby's profile as the code above. Then sign-in as Boby to view his profile 
 
 ## Link Approach
 
-Write the JavaScript file [`xssworm.js`](./xssworm.js) and store it in the external link https://cdn.jsdelivr.net/gh/li-xin-yi/seedlab/Cross-Site-Scripting-Attack/xssworm.js
+Write the JavaScript file [`xssworm.js`](./xssworm.js) and store it in the external link https://cdn.jsdelivr.net/gh/li-xin-yi/seedlab@latest/Cross-Site-Scripting-Attack/xssworm.js
 
 Add it into Samy's profile:
 

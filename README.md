@@ -63,7 +63,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [x] [Shellshock Attack Lab](./Shellshock-Attack)
     - [ ] *Dirty COW Attack Lab*
 - [ ] *Web Security (deprecated, just used to test `snort`)*
-    - [ ] Cross-Site Request Forgery Attack Lab
+    - [ ] [Cross-Site Request Forgery Attack Lab](./Cross-Site-Request-Forgery)
     - [ ] [Cross-Site Scripting Attack Lab](./Cross-Site-Scripting-Attack)
     - [ ] SQL Injection Attack Lab
 - [ ] Network Security
