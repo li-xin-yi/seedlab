@@ -56,8 +56,8 @@ Results ([`XSS_lookup.txt`](./XSS_lookup.txt)):
 Assume we want to issue warnings upon finding any TCP/UDP traffics on ports expect on own 22/23/80/443 ports:
 
 ```
-alert tcp any any <> 10.0.2.4 ![22,23,80,443] (msg: "communicate on special ports";sid:1000001; rev:1;)
-alert udp any any <> 10.0.2.4 ![22,23,80,443] (msg: "communicate on special ports";sid:1000002; rev:1;)
+alert tcp any any <> 10.0.2.15 ![22,23,80,443] (msg: "communicate on special ports";sid:1000001; rev:1;)
+alert udp any any <> 10.0.2.15 ![22,23,80,443] (msg: "communicate on special ports";sid:1000002; rev:1;)
 ```
 
 Try to ping its port 4000 from VM `10.0.2.4`
