@@ -24,7 +24,7 @@ sudo gedit /etc/snort/rules/local.rules
 Then run it with
 
 ```
-sudo snort -A console -q -c /etc/snort/snort.conf -i enp0s3.
+sudo snort -A console -q -c /etc/snort/snort.conf -i enp0s3
 ```
 
 Now, the IP address of the testing VM is set as `10.0.2.15/16`.
