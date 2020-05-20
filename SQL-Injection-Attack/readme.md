@@ -132,7 +132,7 @@ If we must do all things and keep log-in with Alice's own account. We might face
 
 According to code below in `unsafe_edit_backend.php`, if **Password** is to be updated, the session's `pwd` will be updated first, which makes our user authentication invalid immediately and the modification dropped. So we cannot modify the password field directly using Alice's authentication.
 
-```php
+```PHP
 $conn = getDB();
 // Don't do this, this is not safe against SQL injection attack
 $sql="";
@@ -164,10 +164,14 @@ Then construct **Phone Number** as:
 
 ```
 ', password='c0b656d5e415ca1a8e098a408f913ec229e120b6' where name='Boby' #
-```
+````
 
 and save. Now, the change works. You can log in with username `Boby` and password `soudayo`.
 
 Verify:
 
 ![](./soudayo.png)
+
+# Countermeasure
+
+*leave it alone, to keep vulnerable for testing.*
