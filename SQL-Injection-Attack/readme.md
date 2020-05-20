@@ -74,7 +74,7 @@ It contains all information we need but lacks the layout controls by a specified
 We need to inject such a statement to append a row to current database:
 
 ```sql
-INSERT INTO credential (name, eid, password, salary, ssn) VALUES ('YJSNPI','114514','396396',17074,'1919810');
+INSERT INTO credential (name, eid) VALUES ('YJSNPI','114514');
 ```
 
 So construct:
@@ -86,4 +86,4 @@ It fails and alerts with a syntax error:
 
 ![](./fail.png)
 
-Because in PHP's `mysqli` extension, which invokes `mysqli::query` API to handle SQL statement, it doesn't support multiple queries within the same run. Of course, the design of this API attributes to the concern of SQL injection.
+Because in PHP's `mysqli` extension, which invokes [`mysqli::query`](https://www.php.net/manual/en/mysqli.query.php) API to handle SQL statements, it doesn't support for multiple queries within the same run. Of course, the design of this API attributes to the concern of SQL injection.
