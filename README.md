@@ -65,7 +65,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
 - [ ] *Web Security (deprecated, just used to test `snort`)*
     - [ ] [Cross-Site Request Forgery Attack Lab](./Cross-Site-Request-Forgery)
     - [ ] [Cross-Site Scripting Attack Lab](./Cross-Site-Scripting-Attack)
-    - [ ] [SQL Injection Attack Lab](./SQL-Injection-Attack/readme.md)
+    - [ ] [SQL Injection Attack Lab](./SQL-Injection-Attack)
 - [ ] Network Security
     - [x] [Packet Sniffing & Spoofing Lab](./Packet-Sniffing-and-Spoofing)
     - [x] [TCP Attack Lab](./TCP-IP-Attack)
