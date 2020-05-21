@@ -70,6 +70,15 @@ It alerts as expected:
 
 ![](./4000alert.png)
 
+## SQL Inject
+
+```
+alert tcp any any -> any any \
+(msg: "SQL inject"; \
+content: "GET";  nocase; http_method;\
+sid:1000003; rev:1;)
+```
+
 ## References
 
 - http://alexchaoyihuang.blogspot.com/2017/07/a-snort-rule-file-for-identifying-sql.html
