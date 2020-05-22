@@ -130,7 +130,31 @@ Not surprisingly, when typing `a' OR 1=1` as injected username, both 2 rules wil
 
 It is a special case within the scenes that the former rule describes.
 
+In [task 3.2](../SQL-Injection-Attack/readme.md#task-32), we inject with `', salary=1000000 #` to update the `salary` record which is not mutable in edit profile page. It's done by sending an HTTP GET request as:
 
+![](../SQL-Injection-Attack/set_http_get.png)
+
+Its remarkable feature is `'` followed by `,` (URL encode `%2C`) , `=` (URL encode `%3D`), and `#`.
+
+```sh
+alert tcp any any -> 10.0.2.4 80 \ 
+# specify the server ip and http/https port in your machine
+(msg: "SQL inject set properties"; \
+flow:to_server,established; \
+content: "GET";  nocase; http_method;\ 
+#check if its method is GET
+content: "php?"; nocase; http_uri; \ 
+#the web script is written in php so it will be a suffix in request uri
+content: "phonenumber="; nocase; http_uri; pcre:"/(\%27).* (\%2C).*\w*(\%3D)\w*.*(\%23)/ix"; \ 
+# inject in field "phonenumber", check if there is any "', xxx=xxx #" pattern.
+classtype:web-application-attack; sid:1000005; rev:1;)
+```
+
+It can detect if any `', xxx=xxx #` is filled in **Phone Number** field.
+
+![](./../SQL-Injection-Attack/snort_succ_3.png)
+
+**Note**: it is a simple demo for the simplest and highly-specified model of SQL inject attack, a bunch of adjustments should be applied in the real world, in which both attacks and servers are much more complex and flexible.
 
 ## References
 
@@ -140,4 +164,4 @@ It is a special case within the scenes that the former rule describes.
 - [Managing Security with Snort & IDS Tools: Intrusion Detection with Open Source Tools](https://books.google.com/books?id=5UKt2oWpOU0C&printsec=frontcover#v=onepage&q&f=false)
 - Tool: [Snort Rules loader](https://www.arl.wustl.edu/projects/fpx/stat_module/snortrules.html)
 - [Cheatsheet for regex in pcre](https://www.debuggex.com/cheatsheet/regex/pcre)
-
+- [Snort Lab: Payload Detection Rules (PCRE)](https://resources.infosecinstitute.com/snort-lab-payload-detection-rules-pcre/#gref)
