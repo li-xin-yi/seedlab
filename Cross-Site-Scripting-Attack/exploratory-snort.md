@@ -72,12 +72,32 @@ It alerts as expected:
 
 ## SQL Inject
 
+All snort rules are verified on Ubuntu 12.04 (see [its install and use guide](../Heartbleed-Attack/README.MD#detect-the-attack-with-snort)) VM (`10.0.2.6`) as Version 2.9.2 IPv6 GRE. *Somehow, the results cannot be reproduced on Ubuntu 16.04, perhaps snort is installed improperly on it, we temporarily leave the issue in to-do list*
+
+For example, we do SQL inject attack like [task 2.1](../SQL-Injection-Attack/readme.md#task-21) using `Admin' #` as username, which means we should send such an HTTP GET request:
+
+![](../SQL-Injection-Attack/http_get.png)
+
+It's significant and valid component is `#` (URL encode: `%23`) right after `'` (URL encode `%27`) to make the following SQL clauses as comments.
+
+
+```sh
+alert tcp any any -> 10.0.2.4 80 \ 
+# specify the server ip and http/https port in your machine
+(msg: "SQL inject GET"; \
+flow:to_server,established; \
+content: "GET";  nocase; http_method;\ 
+#check if its method is GET
+content: "php?"; nocase; http_uri; \ 
+#the web script is written in php so it will be a suffix in request uri
+content: "username="; nocase; http_uri; pcre:"/(\%27).(\%23)/ix"; \ 
+# inject in field "username", check if there is any "' #" pattern in it
+classtype:web-application-attack; sid:1000003; rev:1;)
 ```
-alert tcp any any -> any any \
-(msg: "SQL inject"; \
-content: "GET";  nocase; http_method;\
-sid:1000003; rev:1;)
-```
+
+When we use `Admin' #` log in the website from VM `10.0.2.6` it will alert:
+
+![](../SQL-Injection-Attack/snort_succ_1.png)
 
 ## References
 
@@ -86,4 +106,5 @@ sid:1000003; rev:1;)
 - https://github.com/kunalgupta007/XssDetectionUsingIds
 - [Managing Security with Snort & IDS Tools: Intrusion Detection with Open Source Tools](https://books.google.com/books?id=5UKt2oWpOU0C&printsec=frontcover#v=onepage&q&f=false)
 - Tool: [Snort Rules loader](https://www.arl.wustl.edu/projects/fpx/stat_module/snortrules.html)
+- [Cheatsheet for regex in pcre](https://www.debuggex.com/cheatsheet/regex/pcre)
 
