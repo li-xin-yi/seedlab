@@ -90,14 +90,47 @@ content: "GET";  nocase; http_method;\
 #check if its method is GET
 content: "php?"; nocase; http_uri; \ 
 #the web script is written in php so it will be a suffix in request uri
-content: "username="; nocase; http_uri; pcre:"/(\%27).(\%23)/ix"; \ 
+content: "username="; nocase; http_uri; pcre:"/(\%27).*(\%23)/ix"; \ 
 # inject in field "username", check if there is any "' #" pattern in it
 classtype:web-application-attack; sid:1000003; rev:1;)
 ```
 
+
 When we use `Admin' #` log in the website from VM `10.0.2.6` it will alert:
 
 ![](../SQL-Injection-Attack/snort_succ_1.png)
+
+If you don't know any username but want to do SQL injection, you might use such a username
+
+```
+xxx' OR 1=1 # 
+```
+
+![](../SQL-Injection-Attack/always_true.png)
+
+The pattern `' OR \w*=\w* #` is a critical signal in such attacks.
+
+```sh
+alert tcp any any -> 10.0.2.4 80 \ 
+# specify the server ip and http/https port in your machine
+(msg: "SQL inject GET alter"; \
+flow:to_server,established; \
+content: "GET";  nocase; http_method;\ 
+#check if its method is GET
+content: "php?"; nocase; http_uri; \ 
+#the web script is written in php so it will be a suffix in request uri
+content: "username="; nocase; http_uri; pcre:"/(\%27).*OR.*\w*(\%3D)\w*(\%23)/ix"; \ 
+# inject in field "username", check if there is any "' #" pattern and short-circuiting in it
+classtype:web-application-attack; sid:1000004; rev:1;)
+```
+
+Not surprisingly, when typing `a' OR 1=1` as injected username, both 2 rules will be triggered:
+
+![](../SQL-Injection-Attack/snort_succ_2.png)
+
+It is a special case within the scenes that the former rule describes.
+
+
 
 ## References
 
