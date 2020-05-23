@@ -156,7 +156,7 @@ It can detect if any `', xxx=xxx #` is filled in **Phone Number** field.
 
 ## XSS
 
-Based on [built-in rules](#built-in-rules-about-xss) in  `/etc/snort/rules/community-web-php.rules`, we decide to detect if a user is going to write some malicious executable `js` code in his/her profile. The modification is usually implemented by sent an HTTP POST request to the server. For example, we edit the profile page as [task 1](./readme.md#task-1) in Cross-Site Scripting Attack Lab, it will send a packet like:
+We decide to detect if a user is going to write some malicious executable `js` code in his/her profile. Editing profile is usually implemented by sent an HTTP POST request to the server. For example, we edit the profile page as [Task 1](./readme.md#task-1) in Cross-Site Scripting Attack Lab, it will send a packet like:
 
 ![](./packet.png)
 
@@ -173,6 +173,34 @@ Or
 ```
 
 In `description` or `briefdescription` field in the request.
+
+In a word, `<script ...>` and `</script>` are suspicious keywords. The URL encoding formats of the mentioned special character:
+
+UTF-8 | URL| 
+---------|----------
+`<` | `%3C`
+`/` | `%2F`
+`>` | `%3E`
+
+To detect those suspicious payloads, we write the following rule based on [built-in rules](#built-in-rules-about-xss) in  `/etc/snort/rules/community-web-php.rules`:
+
+```sh
+alert tcp any any -> 10.0.2.4 80 \ 
+# specify the server ip and http/https port in your machine
+(msg: "suspicious XSS: script in describe"; \
+flow:to_server,established; \
+content: "POST";  nocase; http_method;\ 
+#check if its method is POST
+content: "description="; nocase; http_client_body; pcre: "/(\%3C)(\%2F)?script.*(\%3E)/ix"; \ 
+# inject in field "description", check if there is any "<(/)script ...>" pattern.
+classtype:web-application-attack; sid:1000006; rev:1;)
+```
+
+When submitting the modification of profile like [Task 1](./readme.md#task-1), snort works:
+
+![](./snort_succ.png)
+
+And when we attempt to edit description like [Task 6](./readme.md#task-6), it also can be detected by the rule.
 
 
 **Note**: it is a simple demo for the simplest and highly-specified models of SQL inject and XSS attack, a bunch of adjustments should be applied based on domain in the real world, in which both attacks and servers are much more complex and flexible.
