@@ -154,7 +154,28 @@ It can detect if any `', xxx=xxx #` is filled in **Phone Number** field.
 
 ![](./../SQL-Injection-Attack/snort_succ_3.png)
 
-**Note**: it is a simple demo for the simplest and highly-specified model of SQL inject attack, a bunch of adjustments should be applied in the real world, in which both attacks and servers are much more complex and flexible.
+## XSS
+
+Based on [built-in rules](#built-in-rules-about-xss) in  `/etc/snort/rules/community-web-php.rules`, we decide to detect if a user is going to write some malicious executable `js` code in his/her profile. The modification is usually implemented by sent an HTTP POST request to the server. For example, we edit the profile page as [task 1](./readme.md#task-1) in Cross-Site Scripting Attack Lab, it will send a packet like:
+
+![](./packet.png)
+
+"signature" for this kind of message is
+
+```
+<script> ... </script>
+```
+
+Or
+
+```
+<script type="text/javascript"> ... </script>
+```
+
+In `description` or `briefdescription` field in the request.
+
+
+**Note**: it is a simple demo for the simplest and highly-specified models of SQL inject and XSS attack, a bunch of adjustments should be applied based on domain in the real world, in which both attacks and servers are much more complex and flexible.
 
 ## References
 
