@@ -174,7 +174,7 @@ Or
 
 In `description` or `briefdescription` field in the request.
 
-In a word, `<script ...>` and `</script>` are suspicious keywords. The URL encoding formats of the mentioned special character:
+In a word, `<script ...>` and `</script>` are suspicious keywords. The URL encoding formats of the mentioned special characters:
 
 UTF-8 | URL| 
 ---------|----------
