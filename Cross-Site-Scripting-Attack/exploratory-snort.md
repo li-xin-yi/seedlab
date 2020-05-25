@@ -70,6 +70,24 @@ It alerts as expected:
 
 ![](./4000alert.png)
 
+## Some `pcre` cheatsheet \*
+
+UTF-8 | URL| 
+---------|----------
+`<` | `%3C`
+`/` | `%2F`
+`>` | `%3E`
+`#` | `%23`
+`'` | `%27`
+`=` | `%3D`
+
+`pcre` should be written in `/regex/[modifier]`, the modifier includes `i` (case insensitive), `x` (ignore spaces in regex).
+
+More details can be found in [references](#references):
+
+- To construct patterns : https://www.debuggex.com/cheatsheet/regex/pcre
+- More syntax in `snort` `pcre`: http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node32.html#SECTION004526000000000000000
+
 ## SQL Inject
 
 All snort rules are verified on Ubuntu 12.04 (see [its install and use guide](../Heartbleed-Attack/README.MD#detect-the-attack-with-snort)) VM (`10.0.2.6`) as Version 2.9.2 IPv6 GRE. *Somehow, the results cannot be reproduced on Ubuntu 16.04, perhaps snort is installed improperly on it, we temporarily leave the issue in to-do list*
@@ -79,6 +97,7 @@ For example, we do SQL inject attack like [task 2.1](../SQL-Injection-Attack/rea
 ![](../SQL-Injection-Attack/http_get.png)
 
 It's significant and valid component is `#` (URL encode: `%23`) right after `'` (URL encode `%27`) to make the following SQL clauses as comments.
+
 
 
 ```sh
@@ -176,11 +195,7 @@ In `description` or `briefdescription` field in the request.
 
 In a word, `<script ...>` and `</script>` are suspicious keywords. The URL encoding formats of the mentioned special characters:
 
-UTF-8 | URL| 
----------|----------
-`<` | `%3C`
-`/` | `%2F`
-`>` | `%3E`
+
 
 To detect those suspicious payloads, we write the following rule based on [built-in rules](#built-in-rules-about-xss) in  `/etc/snort/rules/community-web-php.rules`:
 
