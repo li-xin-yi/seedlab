@@ -58,7 +58,7 @@ void main()
 }
 ```
 
-get lists:
+get the list:
 
 ```
 gcc time_guess.c -o time_guess
@@ -93,7 +93,25 @@ print("cannot find the key!")
 It finds out the key:
 
 ```
-$chmod u+X guess_key.py
-$guess_key.py
+$ chmod u+X guess_key.py
+$ guess_key.py
 find the key: 95fa2030e73ed3f8da761b4eb805dfd7
 ```
+
+# Task 3
+
+```
+cat /dev/random | hexdump
+```
+
+It generates output slowly and almost gets stuck when I keep unmoved. monitor the entropy in another terminal：
+
+```
+watch cat /proc/sys/kernel/random/entropy_avail
+```
+
+When I move the mouse or type something, the value increases fast. Every time it decreases, one line of new random numbers appear. So we can say that `/dev/random` consumes the available entropy produced by user's behaviors to generate new random numbers. (more details can be found in [Wikipedia](https://en.wikipedia.org/wiki//dev/random) and [this question](https://unix.stackexchange.com/questions/96847/what-keeps-draining-entropy))
+
+> If a server uses `/dev/random` to generate the random session key with a client. Please describe how you can launch a Denial-Of-Service (DOS) attack on such a server.
+
+Attackers keep asking for establishing connections, which makes the server run out of the available entropy for `/dev/random`. Then the random number generator is blocked.
