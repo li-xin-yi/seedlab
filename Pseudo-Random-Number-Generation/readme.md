@@ -98,16 +98,16 @@ $ guess_key.py
 find the key: 95fa2030e73ed3f8da761b4eb805dfd7
 ```
 
-# Task 3
+# Task 3 - 4
 
 ```
 cat /dev/random | hexdump
 ```
 
-It generates output slowly and almost gets stuck when I keep unmoved. monitor the entropy in another terminal：
+It generates output slowly and almost gets stuck when I keep unmoved. Monitor the entropy in another terminal：
 
 ```
-watch cat /proc/sys/kernel/random/entropy_avail
+watch -n .1 cat /proc/sys/kernel/random/entropy_avail
 ```
 
 When I move the mouse or type something, the value increases fast. Every time it decreases, one line of new random numbers appear. So we can say that `/dev/random` consumes the available entropy produced by user's behaviors to generate new random numbers. (more details can be found in [Wikipedia](https://en.wikipedia.org/wiki//dev/random) and [this question](https://unix.stackexchange.com/questions/96847/what-keeps-draining-entropy))
@@ -115,3 +115,56 @@ When I move the mouse or type something, the value increases fast. Every time it
 > If a server uses `/dev/random` to generate the random session key with a client. Please describe how you can launch a Denial-Of-Service (DOS) attack on such a server.
 
 Attackers keep asking for establishing connections, which makes the server run out of the available entropy for `/dev/random`. Then the random number generator is blocked.
+
+# Task 5
+
+```
+cat /dev/urandom | hexdump
+```
+
+It keeps printing out random numbers. We truncate the first 1 MB outputs into a file named `output.bin`:
+
+```
+head -c 1M /dev/urandom > output.bin
+```
+
+Then use `ent` to evaluate its information density:
+
+```
+ent output.bin
+```
+
+![](./ent_result.png)
+
+see the [documentation](https://www.fourmilab.ch/random/). It looks random in most measures.
+
+Use `/dev/urandom` to generate a 256-bit random number as a session key by [`read_random_key.c`](./read_random_key.c):
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#define LEN 32 // 256 bits
+
+int main()
+{
+    unsigned char *key = (unsigned char *)malloc(sizeof(unsigned char) * LEN);
+    FILE *random = fopen("/dev/urandom", "r");
+    fread(key, sizeof(unsigned char) * LEN, 1, random);
+    fclose(random);
+    printf("k = ");
+    for (int i = 0; i < LEN; i++)
+        printf("%.2x", key[i]);
+    printf("\n");
+    return 0;
+}
+```
+
+Compile:
+
+```
+gcc read_random_key.c -o read_random_key
+```
+
+Run:
+
+![](./urand.png)

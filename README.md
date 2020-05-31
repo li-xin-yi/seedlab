@@ -77,7 +77,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [ ] VPN Lab
 - [ ] Crypto
     - [x]  [Secret-Key Encryption Lab](./Secret-Key-Encryption)
-    - [ ]  [Pseudo Random Number Generation Lab](./Pseudo-Random-Number-Generation)
+    - [x]  [Pseudo Random Number Generation Lab](./Pseudo-Random-Number-Generation)
     - [ ]  MD5 Collision Attack Lab
     - [ ]  RSA Encryption and Signature Lab
     - [ ]  Public-Key Infrastructure (PKI) Lab
