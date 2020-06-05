@@ -63,7 +63,10 @@ Password is dees
 
 # Task 4
 
-Get the hex strings of 2 strings:
+We utilize RSA encryption as signature:
+
+
+First, get the hex strings of 2 strings:
 
 ```
 $ python -c 'print("I owe you $2000".encode("hex"))'
@@ -80,3 +83,26 @@ $ ./encrypt_diff
 Encryption M1: 16CDC2D574C9FDCF64A9E387F9EF69AB8BF9D6B839ABCDBF617EF41BA12BE37B
 Encryption M2: 686126E57A64A817BF54D768ABD615B33ECE1C4D7C8160D3E6645250F3B1C98E
 ```
+
+# Task 5
+
+Get the hex string from `M`:
+
+```
+$ python -c 'print("Launch a missle.".encode("hex"))'
+4c61756e63682061206d6973736c652e
+```
+
+Compile and run [`verify_sig.c`](./verify_sig.c):
+
+```
+$ gcc -o verify_sig verify_sig.c -lcrypto
+$ ./verify_sig
+Encryption result: 0408FCF5E626B154361F4785251F97C7E41527C95110162A0F906B2F54ACF6E1
+Signature: 643D6F34902D9C7EC90CB0B2BCA36C47FA37165C0005CAB026C0542CBDB6802F
+Verification fails! 
+```
+
+It's not Alice's message.
+
+If a valid `S` happens to be corrupted, even just in one byte, our program will also reject the mssage.
