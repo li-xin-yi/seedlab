@@ -10,7 +10,27 @@ Set up 2 Ubuntu 16.04 provided by seed project:
 
 Loki: https://github.com/Neo23x0/Loki
 
-Download the last version from [release](https://github.com/Neo23x0/Loki/releases) and extract it.
+**Note**: To download the last version from [release](https://github.com/Neo23x0/Loki/releases) and then extract is **not** a feasible approach on Ubuntu, `.exe` cannot be executed directly on Linux.
+
+Download all source codes and enter the folder:
+
+```
+git clone https://github.com/Neo23x0/Loki.git
+cd ./loki
+```
+
+Since `loki.py` should be interpreted by Python 2.7, first, we need to install some dependencies:
+
+```
+pip2 install python-dev yara-python psutil netaddr rfc5424-logging-handler
+```
+
+After installed, Run `loki` to complete a simple IOC scan:
+
+![](./loki_welcome.png)
+
+
+
 
 
 ## References
