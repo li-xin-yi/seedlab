@@ -105,4 +105,4 @@ Verification fails!
 
 It's not Alice's message.
 
-If a valid `S` happens to be corrupted, even just in one byte, our program will also reject the mssage.
+If a valid `S` happens to be corrupted, even just in one byte, our program will also reject the message.
