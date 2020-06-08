@@ -22,16 +22,14 @@ int main()
     // assign values
     BN_hex2bn(&n, "AE1CD4DC432798D933779FBD46C6E1247F0CF1233595113AA51B450F18116115");
     BN_dec2bn(&e, "65537");
-    BN_hex2bn(&M, "4c61756e63682061206d6973736c652e"); //hex encode for " Launch a missle."
+    BN_hex2bn(&M, "4c61756e63682061206d697373696c652e"); //hex encode for " Launch a missile."
     BN_hex2bn(&S, "643D6F34902D9C7EC90CB0B2BCA36C47FA37165C0005CAB026C0542CBDB6802F");
 
-    // encrypt M: M^e mod n
-    BN_mod_exp(C, M, e, n, ctx);
-    printBN("Encryption result:", C);
+    // Get S^e mod: if S=M^d mod n, C=M
+    BN_mod_exp(C, S, e, n, ctx);
 
     // verify the signature
-    printBN("Signature:", S);
-    if (BN_cmp(C, S) == 0)
+    if (BN_cmp(C, M) == 0)
     {
         printf("Valid Signature! \n");
     }

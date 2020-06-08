@@ -33,5 +33,7 @@ After installed, Run `loki` to complete a simple IOC scan:
 ## References
 
 [1] https://www.usenix.org/legacy/event/lisa09/tech/slides/daly.pdf
+
 [2] https://en.wikipedia.org/wiki/Advanced_persistent_threat
+
 [3] https://blog.christophetd.fr/malware-analysis-lab-with-virtualbox-inetsim-and-burp/
