@@ -294,7 +294,7 @@ $ sha256sum c0_body.bin
 0640f8d13c0789ff0ed5437cf4bc9f2827d52146dddff38aefc2c17747d45f28  c0_body.bin
 ```
 
-`SHA256withRSA` utilizes [PKCS#1 v1.5](https://tools.ietf.org/html/rfc3447#page-32) to pad hash (detailed algorithm available in [this answer]([answer](https://stackoverflow.com/questions/5054036/what-is-the-difference-between-the-different-padding-types-on-ios/5066573#5066573))). Since sizes of both the signature and the `n` are  256 bytes, we pad the hash into 256 bytes by:
+`SHA256withRSA` utilizes [PKCS#1 v1.5](https://tools.ietf.org/html/rfc3447#page-32) to pad hash (detailed algorithm available in [this answer](https://stackoverflow.com/questions/5054036/what-is-the-difference-between-the-different-padding-types-on-ios/5066573#5066573). Since sizes of both the signature and the `n` are  256 bytes, we pad the hash into 256 bytes by:
 
 ```py
 $ Python
@@ -315,7 +315,7 @@ $ ./verify_ca
 Valid Signature! 
 ```
 
-Valid by `openssl`:
+The same result valided by `openssl`:
 
 ```
 $ openssl verify -untrusted c1.pem c0.pem
