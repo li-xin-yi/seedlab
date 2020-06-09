@@ -315,7 +315,7 @@ $ ./verify_ca
 Valid Signature! 
 ```
 
-The same result valided by `openssl`:
+The same result validated by `openssl`:
 
 ```
 $ openssl verify -untrusted c1.pem c0.pem
