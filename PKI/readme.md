@@ -46,3 +46,46 @@ openssl req -new -x509 -keyout ca.key -out ca.crt -config openssl.cnf
 When asked to type PEM pass phrase, remember the password you typed (e.g. I use `114514`). It will then ask you to fill in some information, you can skip it by <kbd>Enter</kbd>.
 
 > The output of the command are stored in two files: `ca.key` and `ca.crt`. The file `ca.key` contains the CA’s **private key**, while `ca.crt` contains the **public-key certificate**.
+
+# Task 2
+
+As a root CA, we are ready to sign a digital certificate for `SEEDPKILab2018.com`.
+
+## Step 1:  Generate public/private key pair
+
+Generate an RSA key pair. Provide a pass phrase (e.g. I use `soudayo`) to encrypt the private key in `server.key` using AES-128 encryption algorithm.
+
+```
+openssl genrsa -aes128 -out server.key 1024
+```
+
+To see the actual content in `server.key`:
+
+```
+openssl rsa -in server.key -text
+```
+
+## Step 2: Generate a Certificate Signing Request (CSR)
+
+Use `SEEDPKILab2018.com` as the common name of the certificate request
+
+```
+openssl req -new -key server.key -out server.csr -config openssl.cnf
+```
+
+Skip the unnecessary information as well.
+
+Now, the new Certificate Signing Request is saved in `server.csr`, which  basically includes the company's public key.
+
+> The CSR will be sent to the CA, who will generate a certificate for the key (usually after ensuring that identity information in the CSR matches with the server's true identity)
+
+## Step 3: Generating Certificates
+
+In this lab, we will use our own trusted CA to generate certificates.
+
+Use `ca.crt` and `ca.key` to convert `server.csr` to `server.crt`:
+
+```
+openssl ca -in server.csr -out server.crt -cert ca.crt -keyfile ca.key \
+-config openssl.cnf
+```
