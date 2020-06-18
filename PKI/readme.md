@@ -14,6 +14,18 @@ Copy the configuration file into current directory:
 cp /usr/lib/ssl/openssl.cnf ./openssl.cnf
 ```
 
+Replace the line below in this file:
+
+```
+policy		= policy_anything
+```
+
+with
+
+```
+policy		= policy_match
+```
+
 create new sub-directories and files according to what it specified in its `[ CA_default ]` section:
 
 ```
@@ -43,7 +55,7 @@ Start to generate the self-signed certificate for the CA:
 openssl req -new -x509 -keyout ca.key -out ca.crt -config openssl.cnf
 ```
 
-When asked to type PEM pass phrase, remember the password you typed (e.g. I use `114514`). It will then ask you to fill in some information, you can skip it by <kbd>Enter</kbd>.
+When asked to type PEM pass phrase, remember the password you typed (e.g. I use `114514`). It will then ask you to fill in some information, you can skip it by <kbd>Enter</kbd>, except for `commonName`, which is required.
 
 > The output of the command are stored in two files: `ca.key` and `ca.crt`. The file `ca.key` contains the CA’s **private key**, while `ca.crt` contains the **public-key certificate**.
 
@@ -88,4 +100,35 @@ Use `ca.crt` and `ca.key` to convert `server.csr` to `server.crt`:
 ```
 openssl ca -in server.csr -out server.crt -cert ca.crt -keyfile ca.key \
 -config openssl.cnf
+```
+
+# Task 3
+
+## Step 1: Configuring DNS
+
+Open and edit `/etc/hosts`:
+
+```
+sudo gedit /etc/hosts
+```
+
+Add one line:
+
+```
+127.0.0.1 SEEDPKILab2018.com
+```
+
+## Step 2: Configuring the web server
+
+Combine the secret key and certificate into one single file `server.pem`:
+
+```
+cp server.key server.pem
+cat server.crt >> server.pem
+```
+
+Launch the web server using `server.pem`:
+
+```
+openssl s_server -cert server.pem -www
 ```
