@@ -132,3 +132,29 @@ Launch the web server using `server.pem`:
 ```
 openssl s_server -cert server.pem -www
 ```
+
+Now, the server is listening on port 4433. Browser https://seedpkilab2018.com:4433/
+
+![](./insecure.png)
+
+## Step 3: Getting the browser to accept our CA certificate.
+
+Firefox cannot trust `CA.crt` somehow even if I have imported it to Firefox's Certificate manager:
+
+![](./firefox.png)
+
+So I have to open `CA.crt` to import it directly and use Ubuntu Web Browser to visit https://seedpkilab2018.com:4433/
+
+![](./browser.png)
+
+## Step 4. Testing our HTTPS website
+
+### Modify one byte in `server.pem`
+
+It's up to which byte you modify. Most bytes make no differences after corrupted. But some will make the certificate invalid.
+
+### Use localhost
+
+It is the same blank page as https://seedpkilab2018.com:4433/. No error messages.
+
+
