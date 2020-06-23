@@ -158,3 +158,43 @@ It's up to which byte you modify. Most bytes make no differences after corrupted
 It is the same blank page as https://seedpkilab2018.com:4433/. No error messages.
 
 
+# Task 4
+
+Open configuration file of Apache HTTPS server:
+
+```
+sudo gedit  /etc/apache2/sites-available/default-ssl.conf
+```
+
+Add the entry:
+
+```
+<VirtualHost *:443>
+ServerName SEEDPKILab2018.com
+DocumentRoot /var/www/html
+DirectoryIndex index.html
+SSLEngine On
+SSLCertificateFile /var/www/html/server.pem
+SSLCertificateKeyFile /var/www/html/server.key
+</VirtualHost>
+```
+
+```
+sudo cp server.pem server.key /var/www/html
+```
+
+```
+sudo apachectl configtest
+```
+
+```
+sudo a2enmod ssl
+```
+
+```
+sudo a2ensite default-ssl
+```
+
+```
+sudo service apache2 reload
+```
