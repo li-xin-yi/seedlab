@@ -14,18 +14,6 @@ Copy the configuration file into current directory:
 cp /usr/lib/ssl/openssl.cnf ./openssl.cnf
 ```
 
-Replace the line below in this file:
-
-```
-policy		= policy_anything
-```
-
-with
-
-```
-policy		= policy_match
-```
-
 create new sub-directories and files according to what it specified in its `[ CA_default ]` section:
 
 ```
@@ -55,7 +43,19 @@ Start to generate the self-signed certificate for the CA:
 openssl req -new -x509 -keyout ca.key -out ca.crt -config openssl.cnf
 ```
 
-When asked to type PEM pass phrase, remember the password you typed (e.g. I use `114514`). It will then ask you to fill in some information, you can skip it by <kbd>Enter</kbd>, except for `commonName`, which is required.
+Notice that we apply `policy_match` in `openssl.cnf`, so we should keep some fields the same when creating certificates for CA and servers:
+
+```
+[ policy_match ]
+countryName		= match
+stateOrProvinceName	= match
+organizationName	= match
+organizationalUnitName	= optional
+commonName		= supplied
+emailAddress		= optional
+```
+
+When asked to type PEM pass phrase, remember the password you typed (e.g. I use `114514`). It will then ask you to fill in some information, you can skip it by <kbd>Enter</kbd>, except for those required by `policy_match`.
 
 > The output of the command are stored in two files: `ca.key` and `ca.crt`. The file `ca.key` contains the CA’s **private key**, while `ca.crt` contains the **public-key certificate**.
 
@@ -85,7 +85,7 @@ Use `SEEDPKILab2018.com` as the common name of the certificate request
 openssl req -new -key server.key -out server.csr -config openssl.cnf
 ```
 
-Skip the unnecessary information as well.
+Skip the unnecessary information as well, keep the necessary information (required by `policy_match` consistent with the `CA.crt` created in [Task 1](#task-1)).
 
 Now, the new Certificate Signing Request is saved in `server.csr`, which  basically includes the company's public key.
 
@@ -139,13 +139,11 @@ Now, the server is listening on port 4433. Browser https://seedpkilab2018.com:44
 
 ## Step 3: Getting the browser to accept our CA certificate.
 
-Firefox cannot trust `CA.crt` somehow even if I have imported it to Firefox's Certificate manager:
+Search for "certificate" in Firefox's Preferences page, click on "View Certificates" and enter "certificate manager", click on "Authorities tab" and import `CA.crt`. Check "Trust this CA to identify web sites".
+
+Reload https://seedpkilab2018.com:4433/.
 
 ![](./firefox.png)
-
-So I have to open `CA.crt` to import it directly and use Ubuntu Web Browser to visit https://seedpkilab2018.com:4433/
-
-![](./browser.png)
 
 ## Step 4. Testing our HTTPS website
 
@@ -155,8 +153,11 @@ It's up to which byte you modify. Most bytes make no differences after corrupted
 
 ### Use localhost
 
-It is the same blank page as https://seedpkilab2018.com:4433/. No error messages.
+When browsing `https://localhost:443`, it is reported unsafe HTTPS
 
+![](./localhost.png)
+
+Because the `locolhost` has no certificate, the website is using a certificate identified for `seedpkilab2018.com`. 
 
 # Task 4
 
@@ -166,35 +167,50 @@ Open configuration file of Apache HTTPS server:
 sudo gedit  /etc/apache2/sites-available/default-ssl.conf
 ```
 
-Add the entry:
+Add the entry and save:
 
 ```
 <VirtualHost *:443>
-ServerName SEEDPKILab2018.com
-DocumentRoot /var/www/html
-DirectoryIndex index.html
-SSLEngine On
-SSLCertificateFile /var/www/html/server.pem
-SSLCertificateKeyFile /var/www/html/server.key
+        ServerName www.SEEDPKILab2018.com
+        DocumentRoot /var/www/html
+        DirectoryIndex index.html
+
+        SSLEngine On
+        SSLCertificateFile /var/www/html/server.pem
+        SSLCertificateKeyFile /var/www/html/server.key
 </VirtualHost>
 ```
+
+Copy the server certificate and private key to the folder:
 
 ```
 sudo cp server.pem server.key /var/www/html
 ```
 
+Test the Apache configuration file for errors:
+
 ```
 sudo apachectl configtest
 ```
+
+Enable the SSL module:
 
 ```
 sudo a2enmod ssl
 ```
 
+Enable the site we have just edited:
+
 ```
 sudo a2ensite default-ssl
 ```
 
+Restart `Apache`:
+
 ```
 sudo service apache2 reload
 ```
+
+Once `Apache` runs properly, open https://seedpkilab2018.com/
+
+![](./apache.png)
