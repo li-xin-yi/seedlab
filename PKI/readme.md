@@ -87,7 +87,7 @@ openssl req -new -key server.key -out server.csr -config openssl.cnf
 
 Skip the unnecessary information as well, keep the necessary information (required by `policy_match` consistent with the `CA.crt` created in [Task 1](#task-1)).
 
-Now, the new Certificate Signing Request is saved in `server.csr`, which  basically includes the company's public key.
+Now, the new Certificate Signing Request is saved in `server.csr`, which basically includes the company's public key.
 
 > The CSR will be sent to the CA, who will generate a certificate for the key (usually after ensuring that identity information in the CSR matches with the server's true identity)
 
@@ -164,7 +164,7 @@ Because the `locolhost` has no certificate, the website is using a certificate i
 Open configuration file of Apache HTTPS server:
 
 ```
-sudo gedit  /etc/apache2/sites-available/default-ssl.conf
+sudo gedit /etc/apache2/sites-available/default-ssl.conf
 ```
 
 Add the entry and save:
@@ -208,9 +208,88 @@ sudo a2ensite default-ssl
 Restart `Apache`:
 
 ```
-sudo service apache2 reload
+sudo service apache2 restart
 ```
 
 Once `Apache` runs properly, open https://seedpkilab2018.com/
 
 ![](./apache.png)
+
+# Task 5
+
+Suppose we still use this VM (`10.0.2.15`) as the malicious server, start another VM (`10.0.2.4`) as victim.
+
+## Generate a certificate for `example.com`
+
+use a password (e.g. I use `islander`):
+
+```
+openssl genrsa -aes128 -out example.key 1024
+```
+
+Use `example.com` as the common name of the certificate request:
+
+```
+openssl req -new -key example.key -out example.csr -config openssl.cnf
+openssl ca -in example.csr -out example.crt -cert ca.crt -keyfile ca.key \
+-config openssl.cnf
+cp example.key example.pem
+cat example.crt >> example.pem
+```
+
+Copy the certificate and private key to the website root folder:
+
+```
+sudo cp example.pem example.key /var/www/html
+```
+
+## Config and start the server
+
+On the server VM, open `/etc/apache2/sites-available/default-ssl.conf` and add the following entry:
+
+```
+<VirtualHost *:443>
+        ServerName www.example.com
+        DocumentRoot /var/www/html
+        DirectoryIndex index.html
+
+        SSLEngine On
+        SSLCertificateFile /var/www/html/example.pem
+        SSLCertificateKeyFile /var/www/html/example.key
+</VirtualHost>
+```
+
+Restart `Apache`:
+
+```
+sudo apachectl configtest
+sudo service apache2 restart
+```
+
+## Config on Victim VM
+
+On the victim VM, modify `/etc/hosts` by:
+
+```
+sudo gedit /etc/hosts
+```
+
+add one line before the ending:
+
+```
+10.0.2.15	example.com
+```
+
+To get the `ca.crt`, listen on a local port like:
+
+```
+nc -lvp 4444 > ca.crt
+```
+
+Then on the server VM, we send `ca.crt` by:
+
+```
+cat ca.crt | nc 10.0.2.4 4444
+```
+
+Once we receive the file on the victim VM, we install it on Firefox as [above](#step-3-getting-the-browser-to-accept-our-ca-certificate).
