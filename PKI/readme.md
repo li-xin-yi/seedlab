@@ -187,7 +187,7 @@ Copy the server certificate and private key to the folder:
 
 ```
 sudo mkdir /var/www/pki
-sudo cp server.pem server.key /var/www/pki
+sudo cp server.pem server.crt /var/www/pki
 ```
 
 Test the Apache configuration file for errors:
@@ -220,7 +220,7 @@ Once `Apache` runs properly, open https://seedpkilab2018.com/
 
 # Task 5
 
-Suppose we still use this VM (`10.0.2.15`) as the malicious server, start another VM (`10.0.2.4`) as victim.
+Suppose we still use this VM (`10.0.2.10`) as the malicious server, start another VM (`10.0.2.4`) as the victim.
 
 ## Generate a certificate for `example.com`
 
@@ -243,7 +243,8 @@ cat example.crt >> example.pem
 Copy the certificate and private key to the website root folder:
 
 ```
-sudo cp .pem example.key /var/www/html
+sudo mkdir /var/www/example
+sudo cp example.crt example.pem /var/www/example
 ```
 
 ## Config and start the server
@@ -252,13 +253,13 @@ On the server VM, open `/etc/apache2/sites-available/default-ssl.conf` and add t
 
 ```
 <VirtualHost *:443>
-        ServerName www.example.com
-        DocumentRoot /var/www/html
+        ServerName example.com
+        DocumentRoot /var/www/example
         DirectoryIndex index.html
 
         SSLEngine On
-        SSLCertificateFile /var/www/html/example.pem
-        SSLCertificateKeyFile /var/www/html/example.key
+        SSLCertificateFile /var/www/example/example.crt
+        SSLCertificateKeyFile /var/www/example/example.pem
 </VirtualHost>
 ```
 
@@ -277,10 +278,10 @@ On the victim VM, modify `/etc/hosts` by:
 sudo gedit /etc/hosts
 ```
 
-add one line before the ending:
+add one line before the ending, which emulates a DNS cache positing attack:
 
 ```
-10.0.2.15	example.com
+10.0.2.10	example.com
 ```
 
 To get the `ca.crt`, listen on a local port like:
@@ -296,3 +297,17 @@ cat ca.crt | nc 10.0.2.4 4444
 ```
 
 Once we receive the file on the victim VM, we install it on Firefox as [above](#step-3-getting-the-browser-to-accept-our-ca-certificate).
+
+Now, when browsing https://example.com/, the user on this VM actually visit the fake website launched by the malicious server:
+
+![](./example.png)
+
+# Task 6
+
+Based on [Task 5](#task-5), we can assume if the attacker stole `ca.key`, which indicates that he/she can easily generate the CA certificate `ca.crt` by the compromised key:
+
+```
+openssl req -new -x509 -keyout ca.key -out ca.crt -config openssl.cnf
+```
+
+Then, `ca.crt` can be used to sign any server's certificate, including the forged ones. The process of such attacks can be described as [what we did before](#task-5), except that we don't even need to deploy the `ca.crt` on the victim machine because it has already installed the same `ca.crt`.
