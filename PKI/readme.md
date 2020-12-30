@@ -14,7 +14,7 @@ Copy the configuration file into current directory:
 cp /usr/lib/ssl/openssl.cnf ./openssl.cnf
 ```
 
-create new sub-directories and files according to what it specified in its `[ CA_default ]` section:
+create new sub-directories and files according to what it specifies in its `[ CA_default ]` section:
 
 ```
 dir = ./demoCA # Where everything is kept
@@ -39,7 +39,9 @@ echo "1000" > serial
 
 Start to generate the self-signed certificate for the CA:
 
-```
+```sh
+# return to the parent directory
+# cd ..
 openssl req -new -x509 -keyout ca.key -out ca.crt -config openssl.cnf
 ```
 
@@ -71,7 +73,7 @@ Generate an RSA key pair. Provide a pass phrase (e.g. I use `soudayo`) to encryp
 openssl genrsa -aes128 -out server.key 1024
 ```
 
-To see the actual content in `server.key`:
+To see the actual content in `server.key` (pass phrase required):
 
 ```
 openssl rsa -in server.key -text
@@ -153,7 +155,7 @@ It's up to which byte you modify. Most bytes make no differences after corrupted
 
 ### Use localhost
 
-When browsing `https://localhost:443`, it is reported unsafe HTTPS
+When browsing `https://localhost:4433`, it is reported unsafe HTTPS
 
 ![](./localhost.png)
 
@@ -171,20 +173,21 @@ Add the entry and save:
 
 ```
 <VirtualHost *:443>
-        ServerName www.SEEDPKILab2018.com
-        DocumentRoot /var/www/html
+        ServerName SEEDPKILab2018.com
+        DocumentRoot /var/www/pki
         DirectoryIndex index.html
 
         SSLEngine On
-        SSLCertificateFile /var/www/html/server.pem
-        SSLCertificateKeyFile /var/www/html/server.key
+        SSLCertificateFile /var/www/pki/server.crt
+        SSLCertificateKeyFile /var/www/pki/server.pem
 </VirtualHost>
 ```
 
 Copy the server certificate and private key to the folder:
 
 ```
-sudo cp server.pem server.key /var/www/html
+sudo mkdir /var/www/pki
+sudo cp server.pem server.key /var/www/pki
 ```
 
 Test the Apache configuration file for errors:
@@ -240,7 +243,7 @@ cat example.crt >> example.pem
 Copy the certificate and private key to the website root folder:
 
 ```
-sudo cp example.pem example.key /var/www/html
+sudo cp .pem example.key /var/www/html
 ```
 
 ## Config and start the server
