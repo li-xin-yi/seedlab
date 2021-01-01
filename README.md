@@ -81,7 +81,8 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [x]  [MD5 Collision Attack Lab](./MD5-Collision-Attack)
     - [x]  [RSA Encryption and Signature Lab](./RSA-Encryption-and-Signature)
     - [x]  [Public-Key Infrastructure (PKI) Lab](./PKI)
-    - [ ]  Man-In-The-Middle (MITM) Attack Lab
+    - [ ]  [Hash Length Extension Attack Lab](./Hash-Length-Extension-Attack)  (*Azure Ubuntu 20.4*)
+    - [ ]  Transport Layer Security (TLS) Lab
 - [x] System Security
     - [x] [Meltdown Attack Lab](./Meltdown-Attack)
     - [x] [Spectre Attack Lab](./Spectre-Attack)
