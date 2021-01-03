@@ -4,7 +4,7 @@ author: Xinyi Li
 date: \today{}
 ---
 
-Instruction: https://seedsecuritylabs.org/Labs_20.04/Crypto/Crypto_Hash_Length_Ext/
+Instruction: https://seedsecuritylabs.org/Labs_20.04/Files/Crypto_Hash_Length_Ext/Crypto_Hash_Length_Ext.pdf
 
 # Lab Environment
 
@@ -92,4 +92,22 @@ b'\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x
 bytearray(b'123456:myname=koji&uid=koji&lstcmd=1\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0')
 ```
 
+# Task 3
 
+Compile and run [`calculate_mac.c`](./calculate_mac.c)
+
+```sh
+gcc calculate_mac.c -o calculate_mac -lcrypto
+```
+
+If it reports an error as:
+
+```
+gcc: error: calculate_mac.c: No such file or directory
+```
+
+try:
+
+```
+sudo apt install libssl-dev
+```
