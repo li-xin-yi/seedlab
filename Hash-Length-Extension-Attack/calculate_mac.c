@@ -7,15 +7,9 @@ int main(int argc, const char *argv[])
     int i;
     SHA256_Init(&c);
     SHA256_Update(&c,
-                  "This is a test message"
-                  "\x80"
-                  "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-                  "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-                  "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-                  "\x00\x00\x00"
-                  "\x00\x00\x00\x00\x00\x00\x00\xB0"
-                  "Extra message",
-                  64 + 13);
+                  "123456:myname=koji&uid=1001&lstcmd=1\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0"
+                  "&download=secret.txt",
+                  64 + 20);
     SHA256_Final(buffer, &c);
     for (i = 0; i < 32; i++)
     {

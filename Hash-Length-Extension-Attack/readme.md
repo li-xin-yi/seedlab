@@ -77,7 +77,7 @@ Use Python REPL to complete this work:
 
 ```sh
 python
->>> payload = bytearray("123456:myname=koji&uid=koji&lstcmd=1",'utf8')
+>>> payload = bytearray("123456:myname=koji&uid=1001&lstcmd=1",'utf8')
 >>> len(payload)
 36
 >>> length_field = ((64-len(payload))*8).to_bytes(8,'big')
@@ -89,16 +89,26 @@ b'\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x
 >>> len(padding)
 28
 >>> payload + padding
-bytearray(b'123456:myname=koji&uid=koji&lstcmd=1\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0')
+bytearray(b'123456:myname=koji&uid=1001&lstcmd=1\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0')
 ```
 
 # Task 3
 
-Compile and run [`calculate_mac.c`](./calculate_mac.c)
+Compile and run [`calculate_mac.c`](./calculate_mac.c), in which `SHA256_Update`(./calculate_mac.c#L9) takes the padding bytes we obtained in [previous task](#task-2) followed by `&download=secret.txt` as the second argument.
+
 
 ```sh
 gcc calculate_mac.c -o calculate_mac -lcrypto
+./calculate_mac
 ```
+
+It gives:
+
+```
+26d6dec6e0f79ed75bdb91241dc9159d1a1006636a17f039303d59fb4474c5c4
+```
+
+---
 
 If it reports an error as:
 
@@ -111,3 +121,13 @@ try:
 ```
 sudo apt install libssl-dev
 ```
+
+---
+
+Then, visit
+
+```
+http://www.seedlab-hashlen.com/?myname=koji&uid=1001&lstcmd=1%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%e0&download=secret.txt&mac=26d6dec6e0f79ed75bdb91241dc9159d1a1006636a17f039303d59fb4474c5c4
+```
+
+![](./padding.png)
