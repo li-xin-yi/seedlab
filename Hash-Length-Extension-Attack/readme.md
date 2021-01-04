@@ -70,7 +70,7 @@ http://www.seedlab-hashlen.com/?myname=koji&uid=1001&lstcmd=1&download=secret.tx
 
 Construct the padding for 
 ```
-123456:myname=koji&uid=koji&lstcmd=1
+123456:myname=koji&uid=1001&lstcmd=1
 ```
 
 Use Python REPL to complete this work:
@@ -80,21 +80,18 @@ python
 >>> payload = bytearray("123456:myname=koji&uid=1001&lstcmd=1",'utf8')
 >>> len(payload)
 36
->>> length_field = ((64-len(payload))*8).to_bytes(8,'big')
->>> length_field
-b'\x00\x00\x00\x00\x00\x00\x00\xe0'
+>>> length_field = (len(payload)*8).to_bytes(8,'big')
 >>> padding = b'\x80' + b'\x00'*(64-len(payload)-1-8) + length_field
->>> padding
-b'\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0'
->>> len(padding)
-28
->>> payload + padding
-bytearray(b'123456:myname=koji&uid=1001&lstcmd=1\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe0')
+>>> print(''.join('\\x{:02x}'.format(x) for x in padding))
+\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x20
+# for url-encoding
+>>> print(''.join('%{:02x}'.format(x) for x in padding))
+%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%01%20
 ```
 
 # Task 3
 
-Compile and run [`calculate_mac.c`](./calculate_mac.c), in which `SHA256_Update`(./calculate_mac.c#L9) takes the padding bytes we obtained in [previous task](#task-2) followed by `&download=secret.txt` as the second argument.
+Compile and run [`calculate_mac.c`](./calculate_mac.c), in which [`SHA256_Update`](./calculate_mac.c#L9) takes the padding bytes we obtained in [previous task](#task-2) followed by `&download=secret.txt` as the second argument.
 
 
 ```sh
@@ -105,7 +102,7 @@ gcc calculate_mac.c -o calculate_mac -lcrypto
 It gives:
 
 ```
-26d6dec6e0f79ed75bdb91241dc9159d1a1006636a17f039303d59fb4474c5c4
+14797c6db7ca0309d20e0b3c54ac19df60861a83fe64b2713a45e18469b5f3fc
 ```
 
 ---
@@ -127,7 +124,57 @@ sudo apt install libssl-dev
 Then, visit
 
 ```
-http://www.seedlab-hashlen.com/?myname=koji&uid=1001&lstcmd=1%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%e0&download=secret.txt&mac=26d6dec6e0f79ed75bdb91241dc9159d1a1006636a17f039303d59fb4474c5c4
+http://www.seedlab-hashlen.com/?myname=koji&uid=1001&lstcmd=1%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%01%20&download=secret.txt&mac=14797c6db7ca0309d20e0b3c54ac19df60861a83fe64b2713a45e18469b5f3fc
 ```
 
 ![](./padding.png)
+
+# Task 4
+
+Alternatively, to distinguish from the existing work, we turn to apply the `1002:983abe` as `mackey-uid` and "MUR" as current username.
+
+A legitimate request to list files without MAC value:
+
+```
+http://www.seedlab-hashlen.com/?myname=MUR&uid=1002&lstcmd=1
+```
+
+can be calculated by
+
+```sh
+echo -n "983abe:myname=MUR&uid=1002&lstcmd=1" | sha256sum
+# 3a286321c4cb101ce172c1377a75a4ccf46ad9ff4fc8680ec582fa1d004da2e2  -
+```
+
+Assume that we have already observed the full request URL as
+
+```
+http://www.seedlab-hashlen.com/?myname=MUR&uid=1002&lstcmd=1&mac=3a286321c4cb101ce172c1377a75a4ccf46ad9ff4fc8680ec582fa1d004da2e2
+```
+
+But we do not know the mac key of it. So we use [`length_ext.c`](./length_ext.c) to obtain the MAC after appending `"&download=secret.txt"` argument. Compile and run:
+
+```sh
+gcc length_ext.c -o length_ext -lcrypto
+./length_ext
+# bcea031dd94604d9b84e4886aab8e083b6ba2ec66f50316555cf1cb451bf4aed
+```
+
+Then, construct the padding of the original message as [task-2](#task-2), recall that we don't know what the mac key exactly is but we know the length of keys are fixed, so we can easily calculate the padding:
+
+```sh
+python
+>>> payload = bytearray("******:myname=MUR&uid=1002&lstcmd=1",'utf8')
+>>> length_field = (len(payload)*8).to_bytes(8,'big')
+>>> padding = b'\x80' + b'\x00'*(64-len(payload)-1-8) + length_field
+>>> print(''.join('%{:02x}'.format(x) for x in padding))
+%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%01%18
+```
+
+So the full request is:
+
+```
+http://www.seedlab-hashlen.com/?myname=MUR&uid=1002&lstcmd=1%80%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%00%01%18&download=secret.txt&mac=bcea031dd94604d9b84e4886aab8e083b6ba2ec66f50316555cf1cb451bf4aed
+```
+
+![](./mur.png)
