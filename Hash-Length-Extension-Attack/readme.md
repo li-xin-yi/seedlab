@@ -178,3 +178,36 @@ http://www.seedlab-hashlen.com/?myname=MUR&uid=1002&lstcmd=1%80%00%00%00%00%00%0
 ```
 
 ![](./mur.png)
+
+# Task 5
+
+Keyed-hash mesaage authentication code (HMAC) can be used as the follwing example:
+
+```sh
+python
+>>> import hmac
+>>> import hashlib
+>>> key = '123456'
+>>> message = 'myname=koji&uid=1001&lstcmd=1'
+>>> hmac.new(bytearray(key.encode('utf8')), msg=message.encode('utf-8',
+... 'surrogateescape'), digestmod=hashlib.sha256).hexdigest()
+'e216c440b3a152d0a8b62e54076863080bc4febe69299ec3aa420c43033cde10'
+```
+
+Or
+
+```sh
+echo -n "myname=koji&uid=1001&lstcmd=1" | openssl dgst -sha256 -hmac "123456"
+# (stdin)= e216c440b3a152d0a8b62e54076863080bc4febe69299ec3aa420c43033cde10
+```
+
+HMAC works as the figure below shows:
+
+
+![](./hmac.png)
+
+$H$ is a hash function and $K$ is a secret key, which could be of any length. $B$ denotes the block size for $H$.
+
+For an input message $M$, he inner hash (left part) first computes $H(K \oplus ipad) \mathbin\Vert M$ and its result $h$ is passed to the outer hash in order to perform $H((K \oplus opad) \mathbin\Vert h$, in which `ipad` and `opad` are both constants.
+
+In such an algorithm, the MAC key is required in both 2 hash functions. The MAC of a full message calculated by inner hash is required taking by the outer hash function, so if we don't have the internal result, which is invisible to us, we cannot compute the correct final MAC. Due to the sequential design, if the server applies HMAC instead of ordinary MAC methods we discussed above, the attacker cannot directly construct the MAC of an extended message from the final MAC of a legal request only. Therefore, hash length extension attack will fail.
