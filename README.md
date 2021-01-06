@@ -82,7 +82,7 @@ Ref: http://www.cis.syr.edu/~wedu/seed/toc.pdf
     - [x]  [RSA Encryption and Signature Lab](./RSA-Encryption-and-Signature)
     - [x]  [Public-Key Infrastructure (PKI) Lab](./PKI)
     - [x]  [Hash Length Extension Attack Lab](./Hash-Length-Extension-Attack)  (*Azure Ubuntu 20.4*)
-    - [ ]  Transport Layer Security (TLS) Lab
+    - [ ]  [Transport Layer Security (TLS) Lab](./TLS-Lab) (*Azure Ubuntu 20.4*)
 - [x] System Security
     - [x] [Meltdown Attack Lab](./Meltdown-Attack)
     - [x] [Spectre Attack Lab](./Spectre-Attack)
