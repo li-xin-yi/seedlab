@@ -26,6 +26,8 @@ dcup -d
 
 # Task 1
 
+## Task 1.a
+
 We try to create a TCP connection between our VM (**not container**) with https://github.com/
 
 ```
@@ -85,3 +87,20 @@ The captured packets depict a process as:
 *(the figure comes from https://www.cloudflare.com/learning/ssl/what-happens-in-a-tls-handshake/)*
 
 After a 3-way TCP handshake, a TCP connection is established ([Line 23](./handshake.py#L23)), the TLS handshake happens right after it ([Line 29](./handshake.py#L29)).
+
+A clearer illustration of TLS handshake from the seed book:
+
+![](./tls-handshake.png)
+
+## Task 1.b
+
+After creating the TCP connection, it fails to verify server's certificate:
+
+```
+Traceback (most recent call last):
+  File "./handshake.py", line 29, in <module>
+    ssock.do_handshake()   # Start the handshake
+  File "/usr/lib/python3.8/ssl.py", line 1309, in do_handshake
+    self._sslobj.do_handshake()
+ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)
+```
