@@ -104,3 +104,23 @@ Traceback (most recent call last):
     self._sslobj.do_handshake()
 ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)
 ```
+
+As we see before, the CA used to verify GitHub server's certificate is "DigiCert High Assurance EV Root CA", which is displayed by <kbd>subject</kbd> -> <kbd>commonName</kbd> in previous output. But `DigiCert_High_Assurance_EV_Root_CA.pem` is just a symbolic link to `/usr/share/ca-certificates/mozilla/` folder, the actual CA is stored as `/usr/share/ca-certificates/mozilla/DigiCert_High_Assurance_EV_Root_CA.crt`, copy it to your `./client-certs` folder.
+
+**Tips**: If you are still not sure which CA on earth is accessed by the program, you can use 
+
+```
+inotifywait -me access /usr/share/ca-certificates/mozilla/
+```
+
+while running unchanged `handshake.py` to monitor which `crt` is being accessed.
+
+And we need to make a symbolic with the hash value of its common name field:
+
+```sh
+openssl x509 -in client-certs/DigiCert_High_Assurance_EV_Root_CA.crt -noout -subject_hash
+# 244b5494
+ln -s client-certs/DigiCert_High_Assurance_EV_Root_CA.crt client-certs/244b5494.0
+```
+
+Comment out Line 10 and uncomment Line 11 in [`handshake.py`](./handshake.py#L10), then re-run it, it can give the same output as before now.
