@@ -124,3 +124,41 @@ ln -s client-certs/DigiCert_High_Assurance_EV_Root_CA.crt client-certs/244b5494.
 ```
 
 Comment out Line 10 and uncomment Line 11 in [`handshake.py`](./handshake.py#L10), then re-run it, it can give the same output as before now.
+
+# Task 1.c
+
+- **Step 1**: get the IP address of `github.com`
+
+```sh
+dig github.com
+
+# ;; ANSWER SECTION:
+# github.com.             46      IN      A       140.82.112.3
+
+# or it may be
+
+# ;; ANSWER SECTION:
+# github.com.             46      IN      A       140.82.114.4
+```
+
+- **Step 2**: In the client container, edit `/etc/hosts` to add 2 lines (using `nano`):
+
+```
+140.82.112.3 www.github2021.com
+140.82.114.4 www.github2021.com
+```
+
+- **Step 3**: Change `context.check_hostname` as `False` in [`handshake.py`](./handshake.py#L19)
+
+It works like what it did in [Task 1.c](./#task-1.c), but if `context.check_hostname` is set back as `True`, an error appears when verifying certificate:
+
+```
+Traceback (most recent call last):
+  File "./handshake.py", line 29, in <module>
+    ssock.do_handshake()   # Start the handshake
+  File "/usr/lib/python3.8/ssl.py", line 1309, in do_handshake
+    self._sslobj.do_handshake()
+ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'github2021.com'. (_ssl.c:1123)
+```
+
+Because the hostname we request to establish the connection is not the same one specified by the server's SSL certificate.
