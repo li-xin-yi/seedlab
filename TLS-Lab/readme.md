@@ -125,7 +125,7 @@ ln -s client-certs/DigiCert_High_Assurance_EV_Root_CA.crt client-certs/244b5494.
 
 Comment out Line 10 and uncomment Line 11 in [`handshake.py`](./handshake.py#L10), then re-run it, it can give the same output as before now.
 
-# Task 1.c
+## Task 1.c
 
 - **Step 1**: get the IP address of `github.com`
 
@@ -162,3 +162,58 @@ ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verif
 ```
 
 Because the hostname we request to establish the connection is not the same one specified by the server's SSL certificate.
+
+## Task 1.d
+
+Add HTTP request based on [`handshake.py`](./handshake.py) and then get [`http-client.py`](./http-client.py), run:
+
+```
+./http-client.py github.com
+```
+
+It responds a bunch of bytecodes as if we browsing its website:
+
+```
+[b'HTTP/1.1 200 OK',
+ b'Server: GitHub.com',
+ b'Date: Tue, 12 Jan 2021 03:37:40 GMT',
+ b'Content-Type: text/html; charset=utf-8',
+ b'Status: 200 OK',
+ b'Vary: X-PJAX, Accept-Encoding, Accept, X-Requested-With',
+ b'ETag: W/"a4ef97fc825350d2e7db316e6bef68f5"',
+ b'Cache-Control: max-age=0, private, must-revalidate',
+ b'Strict-Transport-Security: max-age=31536000; includeSubdomains; preload',
+ b'X-Frame-Options: deny',
+ b'X-Content-Type-Options: nosniff',
+ b'X-XSS-Protection: 1; mode=block',
+ b'Referrer-Policy: origin-when-cross-origin, strict-origin-when-cross-origin',
+ b'expect-ct: max-age=2592000, report-uri="https://api.github.com/_private/brow'
+ b'ser/errors"',
+ b"Content-Security-Policy: default-src 'none'; base-uri 'self'; block-all-mixe"
+ b"d-content; connect-src 'self' uploads.github.com www.githubstatus.com collec"
+ b'tor.githubapp.com api.github.com github-cloud.s3.amazonaws.com github-produc'
+ b'tion-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manife'
+ b'st-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazo'
+ b'naws.com cdn.optimizely.com logx.optimizely.com/v1/events wss://alive.github'
+ b'.com github.githubassets.com; font-src github.githubassets.com; form-action '
+ b"'self' github.com gist.github.com; frame-ancestors 'none'; frame-src render."
+ b"githubusercontent.com; img-src 'self' data: github.githubassets.com identico"
+ b'ns.github.com collector.githubapp.com github-cloud.s3.amazonaws.com *.github']
+[b'usercontent.com customer-stories-feed.github.com spotlights-feed.github.com;'
+ b" manifest-src 'self'; media-src github.githubassets.com; script-src github.g"
+ b"ithubassets.com; style-src 'unsafe-inline' github.githubassets.com; worker-s"
+ b'rc github.com/socket-worker-5029ae85.js gist.github.com/socket-worker-5029ae'
+ b'85.js',
+...
+[b'tails>\n</template>\n\n    <div class="Popover js-hovercard-content positio'
+ b'n-absolute" style="display: none; outline: none;" tabindex="0">\n  <div c'
+ b'lass="Popover-message Popover-message--bottom-left Popover-message--large Bo'
+ b'x box-shadow-large" style="width:360px;">\n  </div>\n</div>\n\n\n  </body'
+ b'>\n</html>\n\n']
+```
+
+To request for a certain image, specify its relative path as the second argument when running this script. For example:
+
+```
+./http-client.py seedsecuritylabs.org assets/images/seed_labs_b.png
+```
